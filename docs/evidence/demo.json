@@ -1,0 +1,202 @@
+{
+  "mode": "local-simulation",
+  "unsafe": {
+    "id": "c35e7b60-3608-4dbb-9ce8-d77099ceacd1",
+    "tenant": "demo",
+    "author": "engineer",
+    "spec": {
+      "name": "private-service",
+      "module": "local-network-v1",
+      "cidr": "10.42.0.0/16",
+      "subnets": [
+        "10.42.1.0/24",
+        "10.42.2.0/24"
+      ],
+      "ingress": [
+        {
+          "cidr": "0.0.0.0/0",
+          "port": 22
+        }
+      ],
+      "iam": [
+        "logs:PutLogEvents"
+      ],
+      "encrypted": true,
+      "tags": {
+        "owner": "platform",
+        "environment": "development"
+      }
+    },
+    "state": "denied",
+    "revision": 1,
+    "plan": {
+      "digest": "e9b1c23a77ae33ae75dfa2aa4c9b1e1367c695743da72a187b37f63b4bd42a5c",
+      "policy": "45e5dc24f1cd0bc6643cc855c9775c287cd5cd8e6ea145cf161aa38fae6ace9e",
+      "findings": [
+        "IF001: public ingress forbidden",
+        "IF005: ingress must stay inside VPC"
+      ],
+      "created": 1793479383993,
+      "resources": {
+        "name": "private-service",
+        "module": "local-network-v1",
+        "cidr": "10.42.0.0/16",
+        "subnets": [
+          "10.42.1.0/24",
+          "10.42.2.0/24"
+        ],
+        "ingress": [
+          {
+            "cidr": "0.0.0.0/0",
+            "port": 22
+          }
+        ],
+        "iam": [
+          "logs:PutLogEvents"
+        ],
+        "encrypted": true,
+        "tags": {
+          "owner": "platform",
+          "environment": "development"
+        }
+      }
+    }
+  },
+  "independentApprovalEnforced": true,
+  "result": {
+    "id": "c35e7b60-3608-4dbb-9ce8-d77099ceacd1",
+    "tenant": "demo",
+    "author": "engineer",
+    "spec": {
+      "name": "private-service",
+      "module": "local-network-v1",
+      "cidr": "10.42.0.0/16",
+      "subnets": [
+        "10.42.1.0/24",
+        "10.42.2.0/24"
+      ],
+      "ingress": [
+        {
+          "cidr": "10.42.1.0/24",
+          "port": 443
+        }
+      ],
+      "iam": [
+        "logs:PutLogEvents"
+      ],
+      "encrypted": true,
+      "tags": {
+        "owner": "platform",
+        "environment": "development"
+      }
+    },
+    "state": "applied",
+    "revision": 2,
+    "plan": {
+      "digest": "db3770e4e060db0741ff04122ff7fff7821594367467d328b7aae1f08135c724",
+      "policy": "45e5dc24f1cd0bc6643cc855c9775c287cd5cd8e6ea145cf161aa38fae6ace9e",
+      "findings": [],
+      "created": 1793479384009,
+      "resources": {
+        "name": "private-service",
+        "module": "local-network-v1",
+        "cidr": "10.42.0.0/16",
+        "subnets": [
+          "10.42.1.0/24",
+          "10.42.2.0/24"
+        ],
+        "ingress": [
+          {
+            "cidr": "10.42.1.0/24",
+            "port": 443
+          }
+        ],
+        "iam": [
+          "logs:PutLogEvents"
+        ],
+        "encrypted": true,
+        "tags": {
+          "owner": "platform",
+          "environment": "development"
+        }
+      }
+    },
+    "approval": {
+      "actor": "reviewer",
+      "digest": "db3770e4e060db0741ff04122ff7fff7821594367467d328b7aae1f08135c724"
+    },
+    "inventory": {
+      "name": "private-service",
+      "module": "local-network-v1",
+      "cidr": "10.42.0.0/16",
+      "subnets": [
+        "10.42.1.0/24",
+        "10.42.2.0/24"
+      ],
+      "ingress": [
+        {
+          "cidr": "10.42.1.0/24",
+          "port": 443
+        }
+      ],
+      "iam": [
+        "logs:PutLogEvents"
+      ],
+      "encrypted": true,
+      "tags": {
+        "owner": "platform",
+        "environment": "development"
+      }
+    }
+  },
+  "audit": [
+    {
+      "at": "2026-10-31T20:43:03.974Z",
+      "actor": "engineer",
+      "tenant": "demo",
+      "action": "submit",
+      "id": "c35e7b60-3608-4dbb-9ce8-d77099ceacd1",
+      "hash": "1b0bed83eccffe4489f240a171b985f435bdf125149b899e9a0f4a5be356f5c4"
+    },
+    {
+      "at": "2026-10-31T20:43:03.993Z",
+      "actor": "engineer",
+      "tenant": "demo",
+      "action": "denied",
+      "id": "c35e7b60-3608-4dbb-9ce8-d77099ceacd1",
+      "hash": "1c180743fbde9762c92558aa91bf6492dcdb6627543474da8fc8542f05fd4691"
+    },
+    {
+      "at": "2026-10-31T20:43:03.993Z",
+      "actor": "engineer",
+      "tenant": "demo",
+      "action": "revise",
+      "id": "c35e7b60-3608-4dbb-9ce8-d77099ceacd1",
+      "hash": "2355ac479bcd17ce693528202efb205a266189e99456cdb91f1d0c4e22895d43"
+    },
+    {
+      "at": "2026-10-31T20:43:04.009Z",
+      "actor": "engineer",
+      "tenant": "demo",
+      "action": "planned",
+      "id": "c35e7b60-3608-4dbb-9ce8-d77099ceacd1",
+      "hash": "861fe7f08e7aa2039766ac6ae6c578fcf775badd43979421154b1f3d9b48c90e"
+    },
+    {
+      "at": "2026-10-31T20:43:04.009Z",
+      "actor": "reviewer",
+      "tenant": "demo",
+      "action": "approve",
+      "id": "c35e7b60-3608-4dbb-9ce8-d77099ceacd1",
+      "hash": "26ae6189e7523d040039ac39b12eff949784334909c286ac7c5af052f0b89606"
+    },
+    {
+      "at": "2026-10-31T20:43:04.025Z",
+      "actor": "runner",
+      "tenant": "demo",
+      "action": "apply-local-simulation",
+      "id": "c35e7b60-3608-4dbb-9ce8-d77099ceacd1",
+      "hash": "35a4864a3719dabcc87119c934f44ed1c5fb671564d495e2bafd88a3f893bb0e"
+    }
+  ]
+}

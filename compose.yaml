@@ -1,0 +1,11 @@
+services:
+  infraforge:
+    build: .
+    network_mode: host
+    read_only: true
+    tmpfs:
+      - /tmp:size=64m,mode=1777
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    environment:
+      INFRAFORGE_IDENTITIES: ${INFRAFORGE_IDENTITIES:?Set identity JSON before starting}

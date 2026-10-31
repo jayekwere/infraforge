@@ -1,0 +1,11 @@
+node_modules/
+dist/
+.tools/
+web/app.js
+.data/
+*.tfstate*
+.terraform/
+*.tfplan
+.env
+playwright-report/
+test-results/
