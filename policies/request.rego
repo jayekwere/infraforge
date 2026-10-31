@@ -19,3 +19,8 @@ deny contains "IF005: ingress must stay inside VPC" if {
  some rule in input.ingress
  not net.cidr_contains(input.cidr, rule.cidr)
 }
+deny contains "IF006: AWS compute identity only supports scoped log stream actions" if {
+ input.module == "aws-network-v1"
+ some action in input.iam
+ not action in {"logs:PutLogEvents", "logs:CreateLogStream"}
+}

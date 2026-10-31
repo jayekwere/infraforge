@@ -1,0 +1,39 @@
+{
+  "checkedAt": "2026-10-31T21:05:00.611Z",
+  "results": [
+    {
+      "provider": "aws",
+      "validation": {
+        "format_version": "1.0",
+        "valid": true,
+        "error_count": 0,
+        "warning_count": 0,
+        "diagnostics": []
+      },
+      "scope": "provider-schema-validation-only; no plan or apply, no cloud API calls"
+    },
+    {
+      "provider": "azure",
+      "validation": {
+        "format_version": "1.0",
+        "valid": true,
+        "error_count": 0,
+        "warning_count": 0,
+        "diagnostics": []
+      },
+      "scope": "provider-schema-validation-only; no plan or apply, no cloud API calls"
+    },
+    {
+      "provider": "gcp",
+      "validation": {
+        "format_version": "1.0",
+        "valid": true,
+        "error_count": 0,
+        "warning_count": 0,
+        "diagnostics": []
+      },
+      "scope": "provider-schema-validation-only; no plan or apply, no cloud API calls"
+    }
+  ],
+  "liveCloudValidation": false
+}

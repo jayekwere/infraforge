@@ -1,0 +1,37 @@
+{
+  "name": "private-service",
+  "module": "aws-network-v1",
+  "cidr": "10.42.0.0/16",
+  "subnets": [
+    "10.42.1.0/24",
+    "10.42.2.0/24"
+  ],
+  "ingress": [
+    {
+      "cidr": "10.42.0.0/16",
+      "port": 443
+    }
+  ],
+  "iam": [
+    "logs:PutLogEvents"
+  ],
+  "encrypted": true,
+  "compute": {
+    "ami": "ami-00000000000000000",
+    "instanceType": "t3.micro"
+  },
+  "dns": {
+    "zone": "service.example.internal",
+    "name": "api",
+    "address": "10.42.1.10"
+  },
+  "loadBalancer": {
+    "certificateArn": "arn:aws:acm:us-west-2:000000000000:certificate/00000000-0000-0000-0000-000000000000",
+    "port": 443,
+    "healthPath": "/health"
+  },
+  "tags": {
+    "owner": "platform",
+    "environment": "development"
+  }
+}

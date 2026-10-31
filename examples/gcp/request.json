@@ -1,0 +1,21 @@
+{
+  "name": "private-service",
+  "module": "gcp-network-v1",
+  "cidr": "10.42.0.0/16",
+  "subnets": [
+    "10.42.1.0/24",
+    "10.42.2.0/24"
+  ],
+  "ingress": [
+    {
+      "cidr": "10.42.0.0/16",
+      "port": 443
+    }
+  ],
+  "iam": [],
+  "encrypted": true,
+  "tags": {
+    "owner": "platform",
+    "environment": "development"
+  }
+}

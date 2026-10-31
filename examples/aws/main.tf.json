@@ -1,0 +1,242 @@
+{
+  "terraform": {
+    "required_version": ">= 1.15.8, < 1.16",
+    "required_providers": {
+      "aws": {
+        "source": "hashicorp/aws",
+        "version": "6.20.0"
+      }
+    }
+  },
+  "provider": {
+    "aws": {
+      "region": "us-west-2",
+      "default_tags": {
+        "tags": {
+          "owner": "platform",
+          "environment": "development",
+          "managed_by": "infraforge",
+          "Name": "private-service"
+        }
+      }
+    }
+  },
+  "resource": {
+    "aws_vpc": {
+      "network": {
+        "cidr_block": "10.42.0.0/16",
+        "enable_dns_support": true,
+        "enable_dns_hostnames": true
+      }
+    },
+    "aws_subnet": {
+      "private_0": {
+        "vpc_id": "${aws_vpc.network.id}",
+        "cidr_block": "10.42.1.0/24",
+        "availability_zone": "us-west-2a",
+        "map_public_ip_on_launch": false
+      },
+      "private_1": {
+        "vpc_id": "${aws_vpc.network.id}",
+        "cidr_block": "10.42.2.0/24",
+        "availability_zone": "us-west-2b",
+        "map_public_ip_on_launch": false
+      }
+    },
+    "aws_route_table": {
+      "isolated": {
+        "vpc_id": "${aws_vpc.network.id}"
+      }
+    },
+    "aws_route_table_association": {
+      "private_0": {
+        "subnet_id": "${aws_subnet.private_0.id}",
+        "route_table_id": "${aws_route_table.isolated.id}"
+      },
+      "private_1": {
+        "subnet_id": "${aws_subnet.private_1.id}",
+        "route_table_id": "${aws_route_table.isolated.id}"
+      }
+    },
+    "aws_security_group": {
+      "workload": {
+        "name": "private-service",
+        "vpc_id": "${aws_vpc.network.id}",
+        "ingress": [
+          {
+            "from_port": 443,
+            "to_port": 443,
+            "protocol": "tcp",
+            "cidr_blocks": [
+              "10.42.0.0/16"
+            ],
+            "ipv6_cidr_blocks": [],
+            "prefix_list_ids": [],
+            "security_groups": [],
+            "self": false,
+            "description": "Validated private ingress"
+          }
+        ],
+        "egress": [
+          {
+            "from_port": 443,
+            "to_port": 443,
+            "protocol": "tcp",
+            "cidr_blocks": [],
+            "ipv6_cidr_blocks": [],
+            "prefix_list_ids": [],
+            "security_groups": [],
+            "self": true,
+            "description": "HTTPS to private backends"
+          }
+        ]
+      }
+    },
+    "aws_default_security_group": {
+      "closed": {
+        "vpc_id": "${aws_vpc.network.id}",
+        "ingress": [],
+        "egress": []
+      }
+    },
+    "aws_kms_key": {
+      "volume": {
+        "description": "InfraForge encrypted compute volumes",
+        "enable_key_rotation": true,
+        "deletion_window_in_days": 30
+      }
+    },
+    "aws_iam_role": {
+      "compute": {
+        "name": "private-service",
+        "assume_role_policy": "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Principal\":{\"Service\":\"ec2.amazonaws.com\"},\"Action\":\"sts:AssumeRole\"}]}"
+      }
+    },
+    "aws_iam_instance_profile": {
+      "compute": {
+        "name": "private-service",
+        "role": "${aws_iam_role.compute.name}"
+      }
+    },
+    "aws_cloudwatch_log_group": {
+      "compute": {
+        "name": "/infraforge/private-service",
+        "retention_in_days": 30
+      }
+    },
+    "aws_iam_role_policy": {
+      "logs": {
+        "role": "${aws_iam_role.compute.id}",
+        "policy": "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Action\":[\"logs:PutLogEvents\"],\"Resource\":\"${aws_cloudwatch_log_group.compute.arn}:*\"}]}"
+      }
+    },
+    "aws_instance": {
+      "compute": {
+        "ami": "ami-00000000000000000",
+        "instance_type": "t3.micro",
+        "subnet_id": "${aws_subnet.private_0.id}",
+        "vpc_security_group_ids": [
+          "${aws_security_group.workload.id}"
+        ],
+        "associate_public_ip_address": false,
+        "iam_instance_profile": "${aws_iam_instance_profile.compute.name}",
+        "metadata_options": {
+          "http_endpoint": "enabled",
+          "http_tokens": "required",
+          "http_put_response_hop_limit": 1
+        },
+        "root_block_device": {
+          "encrypted": true,
+          "kms_key_id": "${aws_kms_key.volume.arn}",
+          "volume_type": "gp3",
+          "volume_size": 20
+        },
+        "tags": {
+          "owner": "platform",
+          "environment": "development",
+          "managed_by": "infraforge",
+          "Name": "private-service"
+        }
+      }
+    },
+    "aws_route53_zone": {
+      "private": {
+        "name": "service.example.internal",
+        "vpc": {
+          "vpc_id": "${aws_vpc.network.id}"
+        }
+      }
+    },
+    "aws_route53_record": {
+      "service": {
+        "zone_id": "${aws_route53_zone.private.zone_id}",
+        "name": "api.service.example.internal",
+        "type": "A",
+        "ttl": 60,
+        "records": [
+          "10.42.1.10"
+        ]
+      }
+    },
+    "aws_lb": {
+      "internal": {
+        "name": "private-service",
+        "internal": true,
+        "load_balancer_type": "application",
+        "subnets": [
+          "${aws_subnet.private_0.id}",
+          "${aws_subnet.private_1.id}"
+        ],
+        "security_groups": [
+          "${aws_security_group.workload.id}"
+        ],
+        "drop_invalid_header_fields": true
+      }
+    },
+    "aws_lb_target_group": {
+      "backend": {
+        "name": "private-service",
+        "port": 443,
+        "protocol": "HTTPS",
+        "vpc_id": "${aws_vpc.network.id}",
+        "target_type": "instance",
+        "health_check": {
+          "enabled": true,
+          "path": "/health",
+          "protocol": "HTTPS",
+          "matcher": "200-299"
+        }
+      }
+    },
+    "aws_lb_target_group_attachment": {
+      "compute": {
+        "target_group_arn": "${aws_lb_target_group.backend.arn}",
+        "target_id": "${aws_instance.compute.id}",
+        "port": 443
+      }
+    },
+    "aws_lb_listener": {
+      "https": {
+        "load_balancer_arn": "${aws_lb.internal.arn}",
+        "port": 443,
+        "protocol": "HTTPS",
+        "ssl_policy": "ELBSecurityPolicy-TLS13-1-2-2021-06",
+        "certificate_arn": "arn:aws:acm:us-west-2:000000000000:certificate/00000000-0000-0000-0000-000000000000",
+        "default_action": {
+          "type": "forward",
+          "target_group_arn": "${aws_lb_target_group.backend.arn}"
+        }
+      }
+    }
+  },
+  "output": {
+    "vpc_id": {
+      "value": "${aws_vpc.network.id}"
+    }
+  },
+  "data": {
+    "aws_caller_identity": {
+      "current": {}
+    }
+  }
+}

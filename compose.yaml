@@ -1,11 +1,24 @@
 services:
   infraforge:
     build: .
-    network_mode: host
+    image: ${INFRAFORGE_IMAGE:-infraforge:verify}
+    ports:
+      - "127.0.0.1:${INFRAFORGE_PORT:-8080}:8080"
+    volumes:
+      - infraforge-data:/app/.data
     read_only: true
     tmpfs:
       - /tmp:size=64m,mode=1777
     cap_drop: [ALL]
     security_opt: [no-new-privileges:true]
+    pids_limit: 128
+    mem_limit: 512m
     environment:
       INFRAFORGE_IDENTITIES: ${INFRAFORGE_IDENTITIES:?Set identity JSON before starting}
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:8080/').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+volumes:
+  infraforge-data:

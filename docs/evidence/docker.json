@@ -1,0 +1,18 @@
+{
+  "checkedAt": "2026-10-31T21:05:54.437Z",
+  "imageId": "sha256:299f87c5c82af5c6b4d4a6af738a640e4e7370418e6a0b91b28ea9e2c18d5594",
+  "architecture": "arm64",
+  "user": "node",
+  "readOnly": true,
+  "capDrop": [
+    "ALL"
+  ],
+  "checks": [
+    "unauthenticated access denied",
+    "real provider-free Terraform applied in hardened container",
+    "SQLite and Terraform state survive container restart",
+    "unapproved teardown blocked",
+    "independently approved saved destroy plan executed"
+  ],
+  "cloudResourcesCreated": 0
+}

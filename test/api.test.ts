@@ -1,5 +1,8 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
+import { mkdtempSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { spawn } from "node:child_process";
 test("authenticated API lifecycle and tenant isolation", async () => {
 	const tokens = {
@@ -8,10 +11,12 @@ test("authenticated API lifecycle and tenant isolation", async () => {
 		["c".repeat(32)]: { id: "runner", tenant: "demo", role: "operator" },
 		["d".repeat(32)]: { id: "other", tenant: "other", role: "viewer" },
 	};
+	const dir = mkdtempSync(join(tmpdir(), "infraforge-api-"));
 	const proc = spawn(process.execPath, ["dist/src/server.js"], {
 		env: {
 			...process.env,
 			PORT: "18081",
+			INFRAFORGE_DATA_DIR: dir,
 			INFRAFORGE_IDENTITIES: JSON.stringify(tokens),
 		},
 		stdio: ["ignore", "pipe", "pipe"],
@@ -72,5 +77,7 @@ test("authenticated API lifecycle and tenant isolation", async () => {
 		);
 	} finally {
 		proc.kill();
+		await new Promise((r) => proc.once("exit", r));
+		rmSync(dir, { recursive: true, force: true });
 	}
 });

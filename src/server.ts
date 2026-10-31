@@ -2,10 +2,29 @@ import { createServer } from "node:http";
 import { readFileSync } from "node:fs";
 import { timingSafeEqual } from "node:crypto";
 import { Forge, type Actor } from "./core.js";
-const f = new Forge();
-const identities: Record<string, Actor> = JSON.parse(
-	process.env.INFRAFORGE_IDENTITIES || "{}",
-);
+import { z } from "zod";
+import { resolve } from "node:path";
+process.umask(0o077);
+const dataRoot = resolve(process.env.INFRAFORGE_DATA_DIR || ".data");
+const f = new Forge(() => Date.now(), {
+	database: resolve(dataRoot, "infraforge.sqlite"),
+	workspaces: resolve(dataRoot, "workspaces"),
+});
+const identityResult = z
+	.record(
+		z.string().min(32),
+		z
+			.object({
+				id: z.string().min(1).max(80),
+				tenant: z.string().regex(/^[a-z0-9-]{1,64}$/),
+				role: z.enum(["requester", "approver", "operator", "viewer"]),
+			})
+			.strict(),
+	)
+	.safeParse(JSON.parse(process.env.INFRAFORGE_IDENTITIES || "{}"));
+if (!identityResult.success)
+	throw Error("Invalid server identity configuration");
+const identities: Record<string, Actor> = identityResult.data;
 if (!Object.keys(identities).length)
 	throw Error(
 		"Set INFRAFORGE_IDENTITIES to token-to-identity JSON with strong distinct tokens",
@@ -51,6 +70,7 @@ export const server = createServer(async (req, res) => {
 		if (req.method === "GET" && path === "/api/requests") {
 			res.end(
 				JSON.stringify({
+					identity: { id: actor.id, tenant: actor.tenant, role: actor.role },
 					requests: f.list(actor),
 					audit: f.audit.filter((e) => e.tenant === actor.tenant),
 				}),
@@ -71,7 +91,7 @@ export const server = createServer(async (req, res) => {
 			return;
 		}
 		const m =
-			/^\/api\/requests\/([a-f0-9-]+)\/(plan|approve|apply|revise|destroy)$/.exec(
+			/^\/api\/requests\/([a-f0-9-]+)\/(plan|approve|apply|revise|destroy|plan-destroy|plan-repair|reconcile|drift)$/.exec(
 				path,
 			);
 		if (!m) throw Error("Unknown endpoint");
@@ -85,7 +105,15 @@ export const server = createServer(async (req, res) => {
 						? f.apply(actor, id, body.digest)
 						: action === "revise"
 							? f.revise(actor, id, body)
-							: f.destroy(actor, id);
+							: action === "plan-repair"
+								? f.planRepair(actor, id)
+								: action === "plan-destroy"
+									? f.planDestroy(actor, id)
+									: action === "reconcile"
+										? f.reconcile(actor, id)
+										: action === "drift"
+											? f.drift(actor, id)
+											: f.destroy(actor, id, body.digest);
 		res.end(JSON.stringify(result));
 	} catch (e) {
 		res.writeHead(400);
@@ -96,6 +124,17 @@ export const server = createServer(async (req, res) => {
 		);
 	}
 });
-server.listen(Number(process.env.PORT || 8080), "127.0.0.1", () =>
-	console.log("InfraForge local simulator: http://127.0.0.1:8080"),
+server.requestTimeout = 15000;
+server.headersTimeout = 10000;
+server.listen(
+	Number(process.env.PORT || 8080),
+	process.env.INFRAFORGE_BIND || "127.0.0.1",
+	() => console.log("InfraForge local Terraform: http://127.0.0.1:8080"),
+);
+
+process.on("SIGTERM", () =>
+	server.close(() => {
+		f.close();
+		process.exit(0);
+	}),
 );

@@ -1,6 +1,6 @@
 {
 	"name": "infraforge",
-	"version": "0.1.0",
+	"version": "0.2.0",
 	"private": true,
 	"type": "module",
 	"license": "MIT",
@@ -8,11 +8,16 @@
 		"node": ">=24.13 <27"
 	},
 	"scripts": {
-		"build": "tsc && esbuild web/app.tsx --bundle --outfile=web/app.js",
+		"build": "tsc && esbuild web/app.tsx --bundle --minify --define:process.env.NODE_ENV=\\\"production\\\" --outfile=web/app.js",
 		"test": "node --import tsx --test test/*.test.ts",
 		"start": "node dist/src/server.js",
 		"demo": "node --import tsx src/demo.ts",
-		"verify": "npm run build && npm test && npm run demo"
+		"verify": "npm run build && npm test && npm run demo",
+		"test:browser": "playwright test",
+		"dev": "node scripts/local-server.mjs",
+		"test:container": "node scripts/container-smoke.mjs",
+		"test:adapters": "node scripts/adapter-fixtures.mjs && node scripts/validate-adapters.mjs",
+		"test:compose": "node scripts/container-smoke.mjs infraforge:verify --compose"
 	},
 	"dependencies": {
 		"react": "19.2.0",

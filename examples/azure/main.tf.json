@@ -1,0 +1,133 @@
+{
+  "terraform": {
+    "required_version": ">= 1.15.8, < 1.16",
+    "required_providers": {
+      "azurerm": {
+        "source": "hashicorp/azurerm",
+        "version": "4.50.0"
+      }
+    }
+  },
+  "provider": {
+    "azurerm": {
+      "features": {}
+    }
+  },
+  "resource": {
+    "azurerm_resource_group": {
+      "network": {
+        "name": "private-service",
+        "location": "westus2",
+        "tags": {
+          "owner": "platform",
+          "environment": "development"
+        }
+      }
+    },
+    "azurerm_virtual_network": {
+      "network": {
+        "name": "private-service",
+        "location": "${azurerm_resource_group.network.location}",
+        "resource_group_name": "${azurerm_resource_group.network.name}",
+        "address_space": [
+          "10.42.0.0/16"
+        ],
+        "tags": {
+          "owner": "platform",
+          "environment": "development"
+        }
+      }
+    },
+    "azurerm_subnet": {
+      "private_0": {
+        "name": "private-0",
+        "resource_group_name": "${azurerm_resource_group.network.name}",
+        "virtual_network_name": "${azurerm_virtual_network.network.name}",
+        "address_prefixes": [
+          "10.42.1.0/24"
+        ]
+      },
+      "private_1": {
+        "name": "private-1",
+        "resource_group_name": "${azurerm_resource_group.network.name}",
+        "virtual_network_name": "${azurerm_virtual_network.network.name}",
+        "address_prefixes": [
+          "10.42.2.0/24"
+        ]
+      }
+    },
+    "azurerm_network_security_group": {
+      "private": {
+        "name": "private-service",
+        "location": "${azurerm_resource_group.network.location}",
+        "resource_group_name": "${azurerm_resource_group.network.name}",
+        "security_rule": [
+          {
+            "name": "private-0",
+            "priority": 100,
+            "direction": "Inbound",
+            "access": "Allow",
+            "protocol": "Tcp",
+            "description": "InfraForge private segmentation",
+            "source_port_ranges": [],
+            "destination_port_ranges": [],
+            "source_address_prefixes": [],
+            "destination_address_prefixes": [],
+            "source_application_security_group_ids": [],
+            "destination_application_security_group_ids": [],
+            "source_port_range": "*",
+            "destination_port_range": "443",
+            "source_address_prefix": "10.42.0.0/16",
+            "destination_address_prefix": "10.42.0.0/16"
+          },
+          {
+            "name": "deny-all-inbound",
+            "priority": 4096,
+            "direction": "Inbound",
+            "access": "Deny",
+            "protocol": "*",
+            "description": "InfraForge private segmentation",
+            "source_port_ranges": [],
+            "destination_port_ranges": [],
+            "source_address_prefixes": [],
+            "destination_address_prefixes": [],
+            "source_application_security_group_ids": [],
+            "destination_application_security_group_ids": [],
+            "source_port_range": "*",
+            "destination_port_range": "*",
+            "source_address_prefix": "*",
+            "destination_address_prefix": "*"
+          },
+          {
+            "name": "deny-all-outbound",
+            "priority": 4096,
+            "direction": "Outbound",
+            "access": "Deny",
+            "protocol": "*",
+            "description": "InfraForge private segmentation",
+            "source_port_ranges": [],
+            "destination_port_ranges": [],
+            "source_address_prefixes": [],
+            "destination_address_prefixes": [],
+            "source_application_security_group_ids": [],
+            "destination_application_security_group_ids": [],
+            "source_port_range": "*",
+            "destination_port_range": "*",
+            "source_address_prefix": "*",
+            "destination_address_prefix": "*"
+          }
+        ]
+      }
+    },
+    "azurerm_subnet_network_security_group_association": {
+      "private_0": {
+        "subnet_id": "${azurerm_subnet.private_0.id}",
+        "network_security_group_id": "${azurerm_network_security_group.private.id}"
+      },
+      "private_1": {
+        "subnet_id": "${azurerm_subnet.private_1.id}",
+        "network_security_group_id": "${azurerm_network_security_group.private.id}"
+      }
+    }
+  }
+}

@@ -7,11 +7,15 @@ const paths: Record<string, string> = {
 	approve: `/api/requests/${id}/approve`,
 	apply: `/api/requests/${id}/apply`,
 	destroy: `/api/requests/${id}/destroy`,
+	"plan-repair": `/api/requests/${id}/plan-repair`,
+	"plan-destroy": `/api/requests/${id}/plan-destroy`,
+	reconcile: `/api/requests/${id}/reconcile`,
+	drift: `/api/requests/${id}/drift`,
 	revise: `/api/requests/${id}/revise`,
 };
 if (!paths[action])
 	throw Error(
-		"Usage: cli list|submit|plan|approve|apply|revise|destroy [id] [JSON file]. submit takes file as id.",
+		"Usage: cli list|submit|plan|approve|apply|revise|plan-destroy|destroy|plan-repair|reconcile|drift [id] [JSON file]. submit takes file as id.",
 	);
 const body =
 	action === "submit"
