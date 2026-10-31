@@ -87,11 +87,13 @@ After `npm run dev` creates your identity file, stop the development server and 
 
 ```sh
 export INFRAFORGE_IDENTITIES="$(cat .keys/identities.json)"
-export INFRAFORGE_KEY_FILE="$PWD/.keys/state.key"
+chmod 700 .keys
+install -m 0444 .keys/state.key .keys/docker.key
+export INFRAFORGE_KEY_FILE="$PWD/.keys/docker.key"
 docker compose up --build -d
 ```
 
-The service publishes only to loopback, runs as the unprivileged `node` user, uses a read-only root filesystem, drops all capabilities and persists encrypted SQLite documents plus encrypted Terraform state and plans in the `infraforge-data` volume. The key is a separate read-only secret mount. The default Compose configuration enables no AWS account. `docker compose down` retains that data. `docker compose down --volumes` destroys it and is not a routine stop command. Docker execution and restart persistence are exercised by the test scripts below.
+The service publishes only to loopback, runs as the unprivileged `node` user, uses a read-only root filesystem, drops all capabilities and persists encrypted SQLite documents plus encrypted Terraform state and plans in the `infraforge-data` volume. The key is a separate read-only secret mount. The Docker-readable copy stays under the private mode-0700 `.keys` directory, while the original host key remains mode 0600. This permits the container UID to read the bind-mounted secret without making the containing host directory accessible to other users. The default Compose configuration enables no AWS account. `docker compose down` retains that data. `docker compose down --volumes` destroys it and is not a routine stop command. Docker execution and restart persistence are exercised by the test scripts below.
 
 ## Verify
 
