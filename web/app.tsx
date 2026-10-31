@@ -43,7 +43,10 @@ function App() {
 		}
 	}
 	const role = data.identity?.role;
-	const local = (r: any) => r.spec.module === "local-network-v1";
+	const local = (r: any) =>
+		r.spec.module === "local-network-v1" ||
+		(r.spec.module === "aws-network-v1" &&
+			data.capabilities?.awsNetworkExecution);
 	function action(r: any, label: string, path: string, enabled: boolean) {
 		return (
 			<button
@@ -68,17 +71,17 @@ function App() {
 					<a href="#audit">☷ Audit history</a>
 				</nav>
 				<footer>
-					<b>Local Terraform execution</b>
+					<b>Encrypted state storage</b>
 					<br />
-					Cloud adapters export only
+					AWS networking requires opt-in
 					<br />
-					No paid resources provisioned
+					Paid provisioning blocked
 				</footer>
 			</aside>
 			<main id="overview">
 				<header>
 					<span>WORKSPACE / {data.identity?.tenant || "DISCONNECTED"}</span>
-					<b>● Local execution · cloud disabled</b>
+					<b>● Encrypted storage · paid provisioning blocked</b>
 				</header>
 				<h1>Infrastructure control</h1>
 				<p className="muted">
@@ -95,7 +98,7 @@ function App() {
 							).length,
 						],
 						[
-							"Applied locally",
+							"Applied resources",
 							data.requests.filter((r: any) => r.state === "applied").length,
 						],
 						["Audit events", data.audit.length],
@@ -221,9 +224,7 @@ function App() {
 											</>
 										) : r.plan.preview ? (
 											<details>
-												<summary>
-													Cloud adapter export · execution disabled
-												</summary>
+												<summary>Cloud export · no executable artifact</summary>
 												<pre>{JSON.stringify(r.plan.preview, null, 2)}</pre>
 											</details>
 										) : null}
@@ -313,8 +314,8 @@ function App() {
 								: "New infrastructure request"}
 						</h2>
 						<p className="muted">
-							Local module executes provider-free Terraform. AWS, Azure and GCP
-							modules generate exports only.
+							Local Terraform runs offline. Configured AWS targets permit
+							isolated networking only. Paid service provisioning stays blocked.
 						</p>
 						<textarea
 							aria-label="Request JSON"
@@ -372,8 +373,11 @@ function App() {
 								<div>
 									<b>{r.spec.name}</b>
 									<p>
-										{r.spec.cidr} · {r.spec.subnets.length} subnets · local
-										Terraform state
+										{r.spec.cidr} · {r.spec.subnets.length} subnets ·{" "}
+										{r.spec.module === "aws-network-v1"
+											? "AWS networking"
+											: "local Terraform"}{" "}
+										· encrypted state
 									</p>
 									<small>
 										{r.drift
@@ -387,7 +391,8 @@ function App() {
 									"plan-repair",
 									role === "operator" &&
 										r.state === "applied" &&
-										r.drift?.changed,
+										r.drift?.changed &&
+										r.spec.module === "local-network-v1",
 								)}
 								{action(
 									r,

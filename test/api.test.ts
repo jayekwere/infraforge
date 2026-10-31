@@ -1,3 +1,5 @@
+import { randomBytes } from "node:crypto";
+import { writeFileSync } from "node:fs";
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { mkdtempSync, rmSync } from "node:fs";
@@ -12,11 +14,14 @@ test("authenticated API lifecycle and tenant isolation", async () => {
 		["d".repeat(32)]: { id: "other", tenant: "other", role: "viewer" },
 	};
 	const dir = mkdtempSync(join(tmpdir(), "infraforge-api-"));
+	const key = join(dir, "key");
+	writeFileSync(key, randomBytes(32));
 	const proc = spawn(process.execPath, ["dist/src/server.js"], {
 		env: {
 			...process.env,
 			PORT: "18081",
-			INFRAFORGE_DATA_DIR: dir,
+			INFRAFORGE_KEY_FILE: key,
+			INFRAFORGE_DATA_DIR: join(dir, "data"),
 			INFRAFORGE_IDENTITIES: JSON.stringify(tokens),
 		},
 		stdio: ["ignore", "pipe", "pipe"],

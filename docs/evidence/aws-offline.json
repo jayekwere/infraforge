@@ -1,0 +1,117 @@
+{
+  "mode": "simulated-execution-transport",
+  "providerPlanFixture": "real AWS provider plan with closed loopback endpoints",
+  "liveAwsCalls": false,
+  "paidProvisioning": false,
+  "approvedTarget": {
+    "accountId": "000000000000",
+    "region": "us-west-2",
+    "roleArn": "arn:aws:iam::000000000000:role/InfraForgeNetwork"
+  },
+  "applyPlanDigest": "2078994cfe956b995fd91ef2b593070e6f48f38193da44cffd1103459efbd62f",
+  "teardownPlanDigest": "a3815274bbff0161fa35dfe5543da6739be98b7225ef703d0f4131459335868c",
+  "independentApprovalRequired": true,
+  "result": "destroyed",
+  "credentialsAbsentFromWorkspace": true,
+  "audit": [
+    {
+      "sequence": 1,
+      "at": "2026-10-31T21:48:03.694Z",
+      "actor": "engineer",
+      "tenant": "demo",
+      "action": "submit",
+      "id": "57af0856-bde4-46b8-88cd-350c7e5975dc",
+      "detail": "",
+      "previous": "",
+      "hash": "43f5877949c33e8fccd5f36821727b072c3e81929ffc05920286c58113f8e265"
+    },
+    {
+      "sequence": 2,
+      "at": "2026-10-31T21:48:03.916Z",
+      "actor": "engineer",
+      "tenant": "demo",
+      "action": "planned",
+      "id": "57af0856-bde4-46b8-88cd-350c7e5975dc",
+      "detail": "2078994cfe956b995fd91ef2b593070e6f48f38193da44cffd1103459efbd62f",
+      "previous": "43f5877949c33e8fccd5f36821727b072c3e81929ffc05920286c58113f8e265",
+      "hash": "f35af7d22207b6729ad90803b546ea1106f807e2546f2c3d4c7b3f0a3b69ab7e"
+    },
+    {
+      "sequence": 3,
+      "at": "2026-10-31T21:48:03.921Z",
+      "actor": "reviewer",
+      "tenant": "demo",
+      "action": "approve-apply",
+      "id": "57af0856-bde4-46b8-88cd-350c7e5975dc",
+      "detail": "2078994cfe956b995fd91ef2b593070e6f48f38193da44cffd1103459efbd62f",
+      "previous": "f35af7d22207b6729ad90803b546ea1106f807e2546f2c3d4c7b3f0a3b69ab7e",
+      "hash": "62ff37c0d673eb417d98fce1b1b677d7f04e3b41411fe21451ed98d71224c97c"
+    },
+    {
+      "sequence": 4,
+      "at": "2026-10-31T21:48:04.062Z",
+      "actor": "runner",
+      "tenant": "demo",
+      "action": "execution-started",
+      "id": "57af0856-bde4-46b8-88cd-350c7e5975dc",
+      "detail": "apply:2078994cfe956b995fd91ef2b593070e6f48f38193da44cffd1103459efbd62f",
+      "previous": "62ff37c0d673eb417d98fce1b1b677d7f04e3b41411fe21451ed98d71224c97c",
+      "hash": "029967d6031cba4484a8b375d57594f10366f3c4cee2d2f9362905cb014117f1"
+    },
+    {
+      "sequence": 5,
+      "at": "2026-10-31T21:48:04.129Z",
+      "actor": "runner",
+      "tenant": "demo",
+      "action": "terraform-apply-completed",
+      "id": "57af0856-bde4-46b8-88cd-350c7e5975dc",
+      "detail": "2078994cfe956b995fd91ef2b593070e6f48f38193da44cffd1103459efbd62f",
+      "previous": "029967d6031cba4484a8b375d57594f10366f3c4cee2d2f9362905cb014117f1",
+      "hash": "1a1f6a45e3055d64e2e84bbe38eeca156d32a33b0c36a58bde6deb977a5d324b"
+    },
+    {
+      "sequence": 6,
+      "at": "2026-10-31T21:48:04.190Z",
+      "actor": "runner",
+      "tenant": "demo",
+      "action": "destroy-planned",
+      "id": "57af0856-bde4-46b8-88cd-350c7e5975dc",
+      "detail": "a3815274bbff0161fa35dfe5543da6739be98b7225ef703d0f4131459335868c",
+      "previous": "1a1f6a45e3055d64e2e84bbe38eeca156d32a33b0c36a58bde6deb977a5d324b",
+      "hash": "eb41371d5897082b857a7c1c5d6ad151ae50c6c3f1adcea49ca1727c6ca175b0"
+    },
+    {
+      "sequence": 7,
+      "at": "2026-10-31T21:48:04.191Z",
+      "actor": "reviewer",
+      "tenant": "demo",
+      "action": "approve-destroy",
+      "id": "57af0856-bde4-46b8-88cd-350c7e5975dc",
+      "detail": "a3815274bbff0161fa35dfe5543da6739be98b7225ef703d0f4131459335868c",
+      "previous": "eb41371d5897082b857a7c1c5d6ad151ae50c6c3f1adcea49ca1727c6ca175b0",
+      "hash": "307d9caf9f14215f2d4d8f48e234339d5d9a1ba6e51170465f2a7c90786012f9"
+    },
+    {
+      "sequence": 8,
+      "at": "2026-10-31T21:48:04.238Z",
+      "actor": "runner",
+      "tenant": "demo",
+      "action": "execution-started",
+      "id": "57af0856-bde4-46b8-88cd-350c7e5975dc",
+      "detail": "destroy:a3815274bbff0161fa35dfe5543da6739be98b7225ef703d0f4131459335868c",
+      "previous": "307d9caf9f14215f2d4d8f48e234339d5d9a1ba6e51170465f2a7c90786012f9",
+      "hash": "ac00def45e5eab26059df1f23397369c61a9e91e91567e60d6a0e8ec8677a24b"
+    },
+    {
+      "sequence": 9,
+      "at": "2026-10-31T21:48:04.335Z",
+      "actor": "runner",
+      "tenant": "demo",
+      "action": "terraform-destroy-completed",
+      "id": "57af0856-bde4-46b8-88cd-350c7e5975dc",
+      "detail": "a3815274bbff0161fa35dfe5543da6739be98b7225ef703d0f4131459335868c",
+      "previous": "ac00def45e5eab26059df1f23397369c61a9e91e91567e60d6a0e8ec8677a24b",
+      "hash": "b4ea4c7e9ab408c8878d114cb8b1594457dd103c02cc3a54191a987bbad1e494"
+    }
+  ]
+}

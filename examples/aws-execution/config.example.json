@@ -1,0 +1,10 @@
+{
+  "targets": {
+    "demo": {
+      "accountId": "000000000000",
+      "region": "us-west-2",
+      "roleArn": "arn:aws:iam::000000000000:role/InfraForgeNetwork"
+    }
+  },
+  "credentialsFile": "/run/secrets/aws_session"
+}

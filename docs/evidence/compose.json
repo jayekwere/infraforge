@@ -1,6 +1,6 @@
 {
-  "checkedAt": "2026-10-31T21:06:03.780Z",
-  "imageId": "sha256:299f87c5c82af5c6b4d4a6af738a640e4e7370418e6a0b91b28ea9e2c18d5594",
+  "checkedAt": "2026-10-31T21:50:02.013Z",
+  "imageId": "sha256:219f7c632556127f8f4c50a6a19eca8ee49793d5669615b3ea6aa9dd1b4d4028",
   "architecture": "arm64",
   "user": "node",
   "readOnly": true,
@@ -9,10 +9,14 @@
   ],
   "checks": [
     "unauthenticated access denied",
+    "real pinned AWS provider offline plan accepted; paid resource blocked; no cloud endpoints",
     "real provider-free Terraform applied in hardened container",
+    "encrypted data volume contains no plaintext request, state or plan",
     "SQLite and Terraform state survive container restart",
     "unapproved teardown blocked",
     "independently approved saved destroy plan executed"
   ],
-  "cloudResourcesCreated": 0
+  "cloudResourcesCreated": 0,
+  "encryptedStorage": true,
+  "awsLiveExecution": false
 }

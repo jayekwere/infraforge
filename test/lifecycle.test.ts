@@ -1,3 +1,4 @@
+import { randomBytes } from "node:crypto";
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
@@ -28,6 +29,7 @@ const spec = {
 function setup() {
 	const dir = mkdtempSync(join(tmpdir(), "infraforge-life-"));
 	const options = {
+		key: randomBytes(32),
 		database: join(dir, "forge.sqlite"),
 		workspaces: join(dir, "workspaces"),
 	};
@@ -69,11 +71,16 @@ test("tampered saved plan and changed state cannot consume an approval", () => {
 		const e = f.submit(a, spec),
 			p = f.plan(a, e.id).plan!;
 		f.approve(b, e.id, p.digest);
-		appendFileSync(
-			join(dir, "workspaces", p.artifact!.workspace, p.artifact!.file),
-			"tamper",
+		const path = join(
+			dir,
+			"workspaces",
+			p.artifact!.workspace,
+			"workspace.enc",
 		);
-		assert.throws(() => f.apply(o, e.id, p.digest), /changed/);
+		const envelope = JSON.parse(readFileSync(path, "utf8"));
+		envelope.tag = Buffer.alloc(16).toString("base64");
+		writeFileSync(path, JSON.stringify(envelope));
+		assert.throws(() => f.apply(o, e.id, p.digest), /authentication/);
 		assert.equal(f.get(a, e.id).state, "approved");
 	} finally {
 		f.close();
@@ -129,9 +136,9 @@ test("modified audit records are detected on reopen", () => {
 	f.close();
 	try {
 		const db = new DatabaseSync(options.database);
-		db.exec(`UPDATE audit SET document=replace(document,'submit','tamper')`);
+		db.exec(`UPDATE audit SET document='{}'`);
 		db.close();
-		assert.throws(() => new Forge(() => Date.now(), options), /integrity/);
+		assert.throws(() => new Forge(() => Date.now(), options), /authentication/);
 	} finally {
 		rmSync(dir, { recursive: true, force: true });
 	}
@@ -220,10 +227,17 @@ test("state drift invalidates saved approval and local inventory drift is observ
 			dir,
 			"workspaces",
 			teardown.artifact!.workspace,
-			"terraform.tfstate",
+			"state.enc",
 		);
 		const before = readFileSync(path);
-		appendFileSync(path, "\n");
+		f.runner.vault.write(
+			path,
+			Buffer.concat([
+				f.runner.vault.read(path, "state:" + teardown.artifact!.workspace),
+				Buffer.from("\n"),
+			]),
+			"state:" + teardown.artifact!.workspace,
+		);
 		assert.throws(() => f.destroy(o, e.id, teardown.digest), /changed/);
 		writeFileSync(path, before);
 		const replan = f.planDestroy(o, e.id).plan!;
@@ -301,13 +315,10 @@ test("drift checks each resource and remediation requires fresh plan approval", 
 			p = f.plan(a, e.id).plan!;
 		f.approve(b, e.id, p.digest);
 		f.apply(o, e.id, p.digest);
-		const path = join(
-			dir,
-			"workspaces",
-			p.artifact!.workspace,
-			"terraform.tfstate",
+		const path = join(dir, "workspaces", p.artifact!.workspace, "state.enc");
+		const state = JSON.parse(
+			f.runner.vault.read(path, "state:" + p.artifact!.workspace).toString(),
 		);
-		const state = JSON.parse(readFileSync(path, "utf8"));
 		const firewall = state.resources.find((r: any) => r.name === "firewall")
 			.instances[0];
 		firewall.attributes.input.value = [{ cidr: "0.0.0.0/0", port: 22 }];
@@ -316,7 +327,11 @@ test("drift checks each resource and remediation requires fresh plan approval", 
 			[["object", { cidr: "string", port: "number" }]],
 		];
 		firewall.attributes.output = structuredClone(firewall.attributes.input);
-		writeFileSync(path, JSON.stringify(state));
+		f.runner.vault.write(
+			path,
+			JSON.stringify(state),
+			"state:" + p.artifact!.workspace,
+		);
 		assert.equal(f.drift(o, e.id).drift?.changed, true);
 		const repair = f.planRepair(o, e.id).plan!;
 		assert.notEqual(repair.digest, p.digest);

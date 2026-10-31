@@ -1,3 +1,4 @@
+import { randomBytes } from "node:crypto";
 import { Forge } from "./core.js";
 import { mkdirSync, writeFileSync, mkdtempSync, rmSync } from "node:fs";
 import { join } from "node:path";
@@ -21,6 +22,7 @@ export const sample = {
 };
 const dir = mkdtempSync(join(tmpdir(), "infraforge-demo-")),
 	options = {
+		key: randomBytes(32),
 		database: join(dir, "forge.sqlite"),
 		workspaces: join(dir, "workspaces"),
 	};
@@ -63,6 +65,7 @@ try {
 		JSON.stringify(
 			{
 				mode: "real-provider-free-terraform",
+				encryptedStorage: "AES-256-GCM",
 				terraformVersion: p.plan!.artifact!.version,
 				unsafe: denied,
 				independentApprovalEnforced: blocked,

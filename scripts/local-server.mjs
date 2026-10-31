@@ -1,8 +1,18 @@
 import { randomBytes } from "node:crypto";
 import { mkdirSync, writeFileSync, existsSync, readFileSync } from "node:fs";
 import { spawn } from "node:child_process";
+mkdirSync(".keys", { recursive: true, mode: 0o700 });
+if (!existsSync(".keys/state.key") && existsSync(".data/infraforge.sqlite"))
+	throw Error(
+		"Existing data requires its original encryption key or explicit offline migration",
+	);
+if (!existsSync(".keys/state.key"))
+	writeFileSync(".keys/state.key", randomBytes(32), {
+		mode: 0o600,
+		flag: "wx",
+	});
 mkdirSync(".data", { recursive: true, mode: 0o700 });
-const file = ".data/identities.json";
+const file = ".keys/identities.json";
 if (!existsSync(file)) {
 	const roles = ["requester", "approver", "operator", "viewer"];
 	writeFileSync(
@@ -21,10 +31,14 @@ if (!existsSync(file)) {
 	);
 }
 console.log(
-	"Local identities: .data/identities.json. Use distinct role tokens in the dashboard.",
+	"Local identities: .keys/identities.json. Use distinct role tokens in the dashboard.",
 );
 const child = spawn(process.execPath, ["dist/src/server.js"], {
-	env: { ...process.env, INFRAFORGE_IDENTITIES: readFileSync(file, "utf8") },
+	env: {
+		...process.env,
+		INFRAFORGE_KEY_FILE: process.env.INFRAFORGE_KEY_FILE || ".keys/state.key",
+		INFRAFORGE_IDENTITIES: readFileSync(file, "utf8"),
+	},
 	stdio: "inherit",
 });
 for (const signal of ["SIGINT", "SIGTERM"])

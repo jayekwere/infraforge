@@ -1,0 +1,14 @@
+# Explicit opt-in overlay. Never used by demo, tests or hosted CI.
+services:
+  infraforge:
+    environment:
+      INFRAFORGE_AWS_CONFIG_FILE: /run/secrets/aws_config
+    secrets:
+      - aws_config
+      - aws_session
+    mem_limit: 1g
+secrets:
+  aws_config:
+    file: ${INFRAFORGE_AWS_CONFIG_FILE:?Provide an administrator-reviewed AWS target configuration}
+  aws_session:
+    file: ${INFRAFORGE_AWS_SESSION_FILE:?Provide a current short-lived assumed-role session}

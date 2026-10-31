@@ -6,14 +6,17 @@ services:
       - "127.0.0.1:${INFRAFORGE_PORT:-8080}:8080"
     volumes:
       - infraforge-data:/app/.data
+    secrets:
+      - infraforge_key
     read_only: true
     tmpfs:
       - /tmp:size=64m,mode=1777
     cap_drop: [ALL]
     security_opt: [no-new-privileges:true]
     pids_limit: 128
-    mem_limit: 512m
+    mem_limit: 1g
     environment:
+      INFRAFORGE_KEY_FILE: /run/secrets/infraforge_key
       INFRAFORGE_IDENTITIES: ${INFRAFORGE_IDENTITIES:?Set identity JSON before starting}
     healthcheck:
       test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:8080/').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
@@ -22,3 +25,6 @@ services:
       retries: 3
 volumes:
   infraforge-data:
+secrets:
+  infraforge_key:
+    file: ${INFRAFORGE_KEY_FILE:?Set a separate encryption key file}

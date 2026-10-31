@@ -201,6 +201,9 @@ export function evaluate(spec: Spec): string[] {
 	}
 }
 
+import { Vault } from "./vault.js";
+import { randomBytes } from "node:crypto";
+import { AwsGate } from "./aws.js";
 import { Store } from "./store.js";
 import { Terraform, type Artifact } from "./terraform.js";
 import { renderAdapter } from "./adapters.js";
@@ -210,10 +213,28 @@ export class Forge {
 	readonly runner: Terraform;
 	constructor(
 		private now = () => Date.now(),
-		options: { database?: string; workspaces?: string } = {},
+		options: {
+			database?: string;
+			workspaces?: string;
+			key?: Buffer;
+			aws?: AwsGate;
+			execute?: (
+				cwd: string,
+				args: string[],
+				env: Record<string, string | undefined>,
+			) => string;
+		} = {},
 	) {
-		this.store = new Store(options.database);
-		this.runner = new Terraform(options.workspaces ?? ".data/workspaces");
+		if (options.database && !options.key)
+			throw Error("Durable storage requires an external encryption key");
+		const vault = new Vault(options.key ?? randomBytes(32));
+		this.store = new Store(options.database, vault);
+		this.runner = new Terraform(
+			options.workspaces ?? ".data/workspaces",
+			vault,
+			options.aws,
+			options.execute,
+		);
 	}
 	get audit() {
 		return this.store.audit();
@@ -241,7 +262,12 @@ export class Forge {
 		for (const other of this.store.list())
 			if (
 				other.id !== id &&
-				other.tenant === a.tenant &&
+				(other.tenant === a.tenant ||
+					(spec.module === "aws-network-v1" &&
+						other.spec.module === "aws-network-v1" &&
+						this.runner.aws?.config.targets[a.tenant]?.accountId ===
+							this.runner.aws?.config.targets[other.tenant]?.accountId &&
+						!!this.runner.aws?.config.targets[a.tenant])) &&
 				other.state !== "destroyed" &&
 				overlaps(spec.cidr, other.spec.cidr)
 			)
@@ -334,7 +360,11 @@ export class Forge {
 				generation = randomUUID();
 			let artifact: Artifact | undefined, preview: unknown;
 			if (!findings.length) {
-				if (e.spec.module === "local-network-v1")
+				if (
+					e.spec.module === "local-network-v1" ||
+					(e.spec.module === "aws-network-v1" &&
+						this.runner.enabledAws(e.tenant))
+				)
 					artifact = this.runner.plan(
 						e.tenant,
 						id,
@@ -381,6 +411,7 @@ export class Forge {
 			digest([e.id, e.revision, { ...e.plan, digest: "" }]) !== e.plan.digest ||
 			e.plan.digest !== hash ||
 			e.plan.operation !== operation ||
+			(!!e.plan.artifact && e.plan.artifact.operation !== operation) ||
 			e.plan.findings.length ||
 			this.now() - e.plan.created > 900000 ||
 			this.now() < e.plan.created ||
@@ -431,7 +462,12 @@ export class Forge {
 				e.operation.kind === operation
 			)
 				return e;
-			if (e.spec.module !== "local-network-v1")
+			if (
+				e.spec.module !== "local-network-v1" &&
+				!(
+					e.spec.module === "aws-network-v1" && this.runner.enabledAws(e.tenant)
+				)
+			)
 				throw Error(
 					"Cloud execution is disabled. Adapter exports cannot be applied.",
 				);
@@ -464,7 +500,10 @@ export class Forge {
 			const observed = this.runner.observe(entry.tenant, id);
 			if (
 				operation === "apply"
-					? !this.runner.matches(observed, entry.spec)
+					? !this.runner.matches(observed, entry.spec, {
+							id,
+							tenant: entry.tenant,
+						})
 					: (observed.values?.root_module?.resources ?? []).length !== 0
 			)
 				throw Error("Terraform readback did not prove completion");
@@ -497,7 +536,11 @@ export class Forge {
 			if (
 				!["executing", "uncertain"].includes(e.state) ||
 				!e.operation ||
-				e.spec.module !== "local-network-v1"
+				(e.spec.module !== "local-network-v1" &&
+					!(
+						e.spec.module === "aws-network-v1" &&
+						this.runner.enabledAws(e.tenant)
+					))
 			)
 				throw Error("No uncertain local execution");
 			if (e.state === "executing") {
@@ -522,7 +565,7 @@ export class Forge {
 			const matches =
 				e.operation.kind === "destroy"
 					? resources.length === 0
-					: this.runner.matches(observed, e.spec);
+					: this.runner.matches(observed, e.spec, { id, tenant: e.tenant });
 			if (!matches)
 				throw Error(
 					"State does not prove completion. Keep workspace quarantined and inspect locally.",
@@ -540,12 +583,22 @@ export class Forge {
 		this.permit(a, ["operator", "viewer"]);
 		return this.store.transaction(() => {
 			const e = this.get(a, id);
-			if (e.state !== "applied" || e.spec.module !== "local-network-v1")
+			if (
+				e.state !== "applied" ||
+				(e.spec.module !== "local-network-v1" &&
+					!(
+						e.spec.module === "aws-network-v1" &&
+						this.runner.enabledAws(e.tenant)
+					))
+			)
 				throw Error("Drift requires applied local state");
 			const observed = this.runner.observe(e.tenant, id);
 			e.drift = {
 				checked: new Date(this.now()).toISOString(),
-				changed: !this.runner.matches(observed, e.spec),
+				changed: !this.runner.matches(observed, e.spec, {
+					id,
+					tenant: e.tenant,
+				}),
 			};
 			this.store.put(e);
 			this.event(a, "drift-check", id, String(e.drift.changed));

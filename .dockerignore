@@ -10,3 +10,6 @@ dist
 playwright-report
 test-results
 python/__pycache__
+
+.keys/
+*.key

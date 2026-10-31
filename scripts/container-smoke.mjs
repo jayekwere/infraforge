@@ -1,6 +1,15 @@
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { execFileSync } from "node:child_process";
 import { randomBytes, randomUUID } from "node:crypto";
-import { mkdirSync, writeFileSync } from "node:fs";
+import {
+	mkdirSync,
+	writeFileSync,
+	mkdtempSync,
+	readFileSync,
+	rmSync,
+	chmodSync,
+} from "node:fs";
 const image = process.argv[2] || "infraforge:verify",
 	suffix = randomUUID().slice(0, 8),
 	name = "infraforge-test-" + suffix,
@@ -8,6 +17,9 @@ const image = process.argv[2] || "infraforge:verify",
 const composeMode = process.argv.includes("--compose");
 const project = name;
 let target = name;
+const secretDir = mkdtempSync(join(tmpdir(), "infraforge-container-key-")),
+	keyFile = join(secretDir, "key");
+writeFileSync(keyFile, randomBytes(32), { mode: 0o444 });
 const tokens = {
 	requester: randomBytes(24).toString("hex"),
 	approver: randomBytes(24).toString("hex"),
@@ -27,6 +39,7 @@ const docker = (args) =>
 			INFRAFORGE_IDENTITIES: JSON.stringify(identities),
 			INFRAFORGE_PORT: "0",
 			INFRAFORGE_IMAGE: image,
+			INFRAFORGE_KEY_FILE: keyFile,
 		},
 		timeout: 60000,
 		stdio: ["ignore", "pipe", "pipe"],
@@ -36,7 +49,7 @@ const checks = [];
 async function ready() {
 	for (let i = 0; i < 80; i++) {
 		try {
-			if ((await fetch(base)).ok) return;
+			if ((await fetch(base, { headers: { Connection: "close" } })).ok) return;
 		} catch {}
 		await new Promise((r) => setTimeout(r, 100));
 	}
@@ -48,6 +61,7 @@ async function call(path, role, body, expected = 200) {
 		headers: {
 			Authorization: `Bearer ${tokens[role] || "invalid"}`,
 			"Content-Type": "application/json",
+			Connection: "close",
 		},
 		...(body ? { body: JSON.stringify(body) } : {}),
 	});
@@ -76,11 +90,15 @@ try {
 			"--detach",
 			"--name",
 			name,
+			"--mount",
+			`type=bind,src=${keyFile},dst=/run/secrets/infraforge_key,readonly`,
+			"--env",
+			"INFRAFORGE_KEY_FILE=/run/secrets/infraforge_key",
 			"--read-only",
 			"--cap-drop=ALL",
 			"--security-opt=no-new-privileges:true",
 			"--pids-limit=128",
-			"--memory=512m",
+			"--memory=1g",
 			"--tmpfs",
 			"/tmp:rw,size=64m,mode=1777",
 			"--mount",
@@ -98,6 +116,19 @@ try {
 	await ready();
 	await call("/api/requests", "invalid", undefined, 401);
 	checks.push("unauthenticated access denied");
+	const offline = docker([
+		"exec",
+		target,
+		"node",
+		"--input-type=module",
+		"-e",
+		readFileSync("scripts/container-aws-offline.mjs", "utf8"),
+	]);
+	if (offline !== "aws-offline-provider-ok")
+		throw Error("Offline provider validation failed");
+	checks.push(
+		"real pinned AWS provider offline plan accepted; paid resource blocked; no cloud endpoints",
+	);
 	const spec = {
 		name: "docker-network",
 		module: "local-network-v1",
@@ -118,6 +149,18 @@ try {
 	});
 	if (applied.state !== "applied") throw Error("Apply incomplete");
 	checks.push("real provider-free Terraform applied in hardened container");
+	const scan = docker([
+		"exec",
+		target,
+		"node",
+		"-e",
+		`const fs=require('fs'),path=require('path');function scan(dir){for(const e of fs.readdirSync(dir,{withFileTypes:true})){const p=path.join(dir,e.name);if(e.isDirectory())scan(p);else{if(/\\.(tfstate|tfplan)$/.test(e.name))throw Error('Plaintext Terraform file');const b=fs.readFileSync(p);if(b.includes('docker-network')||b.includes('10.61.0.0/16'))throw Error('Plaintext request in data volume');}}}scan('/app/.data');console.log('encrypted-volume-ok');`,
+	]);
+	if (scan !== "encrypted-volume-ok")
+		throw Error("Encryption verification failed");
+	checks.push(
+		"encrypted data volume contains no plaintext request, state or plan",
+	);
 	docker(["restart", target]);
 	base =
 		"http://127.0.0.1:" +
@@ -164,6 +207,8 @@ try {
 				capDrop: info.HostConfig.CapDrop,
 				checks,
 				cloudResourcesCreated: 0,
+				encryptedStorage: true,
+				awsLiveExecution: false,
 			},
 			null,
 			2,
@@ -172,6 +217,7 @@ try {
 	console.log("PASS: " + checks.join("; "));
 } catch (error) {
 	try {
+		console.error(docker(["inspect", "--format", "{{json .State}}", target]));
 		console.error(docker(["logs", target]));
 	} catch {}
 	throw error;
@@ -183,4 +229,5 @@ try {
 	try {
 		if (!composeMode) docker(["volume", "rm", volume]);
 	} catch {}
+	rmSync(secretDir, { recursive: true, force: true });
 }

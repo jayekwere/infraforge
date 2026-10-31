@@ -1,0 +1,788 @@
+{
+	"spec": {
+		"name": "offline-network",
+		"module": "aws-network-v1",
+		"cidr": "10.42.0.0/16",
+		"subnets": ["10.42.1.0/24"],
+		"ingress": [
+			{
+				"cidr": "10.42.1.0/24",
+				"port": 443
+			}
+		],
+		"iam": [],
+		"encrypted": true,
+		"tags": {
+			"owner": "platform",
+			"environment": "development"
+		}
+	},
+	"target": {
+		"accountId": "000000000000",
+		"region": "us-west-2",
+		"roleArn": "arn:aws:iam::000000000000:role/InfraForgeNetwork"
+	},
+	"plan": {
+		"format_version": "1.2",
+		"terraform_version": "1.15.8",
+		"planned_values": {
+			"outputs": {
+				"vpc_id": {
+					"sensitive": false
+				}
+			},
+			"root_module": {
+				"resources": [
+					{
+						"address": "aws_default_security_group.closed",
+						"mode": "managed",
+						"type": "aws_default_security_group",
+						"name": "closed",
+						"provider_name": "registry.terraform.io/hashicorp/aws",
+						"schema_version": 1,
+						"values": {
+							"egress": [],
+							"ingress": [],
+							"region": "us-west-2",
+							"revoke_rules_on_delete": false,
+							"tags": null,
+							"tags_all": {
+								"Name": "offline-network",
+								"environment": "development",
+								"infraforge_request": "00000000-0000-0000-0000-000000000000",
+								"infraforge_tenant": "99e5095aacce94d035c31d3e0842540182591e18766b7cdf6c9f3e095e837dda",
+								"managed_by": "infraforge",
+								"owner": "platform"
+							}
+						},
+						"sensitive_values": {
+							"egress": [],
+							"ingress": [],
+							"tags_all": {}
+						}
+					},
+					{
+						"address": "aws_route_table.isolated",
+						"mode": "managed",
+						"type": "aws_route_table",
+						"name": "isolated",
+						"provider_name": "registry.terraform.io/hashicorp/aws",
+						"schema_version": 0,
+						"values": {
+							"region": "us-west-2",
+							"route": [],
+							"tags": null,
+							"tags_all": {
+								"Name": "offline-network",
+								"environment": "development",
+								"infraforge_request": "00000000-0000-0000-0000-000000000000",
+								"infraforge_tenant": "99e5095aacce94d035c31d3e0842540182591e18766b7cdf6c9f3e095e837dda",
+								"managed_by": "infraforge",
+								"owner": "platform"
+							},
+							"timeouts": null
+						},
+						"sensitive_values": {
+							"propagating_vgws": [],
+							"route": [],
+							"tags_all": {}
+						},
+						"identity_schema_version": 0,
+						"identity": {
+							"account_id": null,
+							"id": null,
+							"region": null
+						}
+					},
+					{
+						"address": "aws_route_table_association.private_0",
+						"mode": "managed",
+						"type": "aws_route_table_association",
+						"name": "private_0",
+						"provider_name": "registry.terraform.io/hashicorp/aws",
+						"schema_version": 0,
+						"values": {
+							"gateway_id": null,
+							"region": "us-west-2",
+							"timeouts": null
+						},
+						"sensitive_values": {}
+					},
+					{
+						"address": "aws_security_group.workload",
+						"mode": "managed",
+						"type": "aws_security_group",
+						"name": "workload",
+						"provider_name": "registry.terraform.io/hashicorp/aws",
+						"schema_version": 1,
+						"values": {
+							"description": "Managed by Terraform",
+							"egress": [],
+							"ingress": [
+								{
+									"cidr_blocks": ["10.42.1.0/24"],
+									"description": "Validated private ingress",
+									"from_port": 443,
+									"ipv6_cidr_blocks": [],
+									"prefix_list_ids": [],
+									"protocol": "tcp",
+									"security_groups": [],
+									"self": false,
+									"to_port": 443
+								}
+							],
+							"name": "offline-network",
+							"region": "us-west-2",
+							"revoke_rules_on_delete": false,
+							"tags": null,
+							"tags_all": {
+								"Name": "offline-network",
+								"environment": "development",
+								"infraforge_request": "00000000-0000-0000-0000-000000000000",
+								"infraforge_tenant": "99e5095aacce94d035c31d3e0842540182591e18766b7cdf6c9f3e095e837dda",
+								"managed_by": "infraforge",
+								"owner": "platform"
+							},
+							"timeouts": null
+						},
+						"sensitive_values": {
+							"egress": [],
+							"ingress": [
+								{
+									"cidr_blocks": [false],
+									"ipv6_cidr_blocks": [],
+									"prefix_list_ids": [],
+									"security_groups": []
+								}
+							],
+							"tags_all": {}
+						},
+						"identity_schema_version": 0,
+						"identity": {
+							"account_id": null,
+							"id": null,
+							"region": null
+						}
+					},
+					{
+						"address": "aws_subnet.private_0",
+						"mode": "managed",
+						"type": "aws_subnet",
+						"name": "private_0",
+						"provider_name": "registry.terraform.io/hashicorp/aws",
+						"schema_version": 1,
+						"values": {
+							"assign_ipv6_address_on_creation": false,
+							"availability_zone": "us-west-2a",
+							"cidr_block": "10.42.1.0/24",
+							"customer_owned_ipv4_pool": null,
+							"enable_dns64": false,
+							"enable_lni_at_device_index": null,
+							"enable_resource_name_dns_a_record_on_launch": false,
+							"enable_resource_name_dns_aaaa_record_on_launch": false,
+							"ipv6_cidr_block": null,
+							"ipv6_native": false,
+							"map_customer_owned_ip_on_launch": null,
+							"map_public_ip_on_launch": false,
+							"outpost_arn": null,
+							"region": "us-west-2",
+							"tags": null,
+							"tags_all": {
+								"Name": "offline-network",
+								"environment": "development",
+								"infraforge_request": "00000000-0000-0000-0000-000000000000",
+								"infraforge_tenant": "99e5095aacce94d035c31d3e0842540182591e18766b7cdf6c9f3e095e837dda",
+								"managed_by": "infraforge",
+								"owner": "platform"
+							},
+							"timeouts": null
+						},
+						"sensitive_values": {
+							"tags_all": {}
+						},
+						"identity_schema_version": 0,
+						"identity": {
+							"account_id": null,
+							"id": null,
+							"region": null
+						}
+					},
+					{
+						"address": "aws_vpc.network",
+						"mode": "managed",
+						"type": "aws_vpc",
+						"name": "network",
+						"provider_name": "registry.terraform.io/hashicorp/aws",
+						"schema_version": 1,
+						"values": {
+							"assign_generated_ipv6_cidr_block": false,
+							"cidr_block": "10.42.0.0/16",
+							"enable_dns_hostnames": true,
+							"enable_dns_support": true,
+							"enable_network_address_usage_metrics": false,
+							"instance_tenancy": "default",
+							"ipv4_ipam_pool_id": null,
+							"ipv4_netmask_length": null,
+							"ipv6_ipam_pool_id": null,
+							"ipv6_netmask_length": null,
+							"region": "us-west-2",
+							"tags": null,
+							"tags_all": {
+								"Name": "offline-network",
+								"environment": "development",
+								"infraforge_request": "00000000-0000-0000-0000-000000000000",
+								"infraforge_tenant": "99e5095aacce94d035c31d3e0842540182591e18766b7cdf6c9f3e095e837dda",
+								"managed_by": "infraforge",
+								"owner": "platform"
+							}
+						},
+						"sensitive_values": {
+							"tags_all": {}
+						},
+						"identity_schema_version": 0,
+						"identity": {
+							"account_id": null,
+							"id": null,
+							"region": null
+						}
+					}
+				]
+			}
+		},
+		"resource_changes": [
+			{
+				"address": "aws_default_security_group.closed",
+				"mode": "managed",
+				"type": "aws_default_security_group",
+				"name": "closed",
+				"provider_name": "registry.terraform.io/hashicorp/aws",
+				"change": {
+					"actions": ["create"],
+					"before": null,
+					"after": {
+						"egress": [],
+						"ingress": [],
+						"region": "us-west-2",
+						"revoke_rules_on_delete": false,
+						"tags": null,
+						"tags_all": {
+							"Name": "offline-network",
+							"environment": "development",
+							"infraforge_request": "00000000-0000-0000-0000-000000000000",
+							"infraforge_tenant": "99e5095aacce94d035c31d3e0842540182591e18766b7cdf6c9f3e095e837dda",
+							"managed_by": "infraforge",
+							"owner": "platform"
+						}
+					},
+					"after_unknown": {
+						"arn": true,
+						"description": true,
+						"egress": [],
+						"id": true,
+						"ingress": [],
+						"name": true,
+						"name_prefix": true,
+						"owner_id": true,
+						"tags_all": {},
+						"vpc_id": true
+					},
+					"before_sensitive": false,
+					"after_sensitive": {
+						"egress": [],
+						"ingress": [],
+						"tags_all": {}
+					}
+				}
+			},
+			{
+				"address": "aws_route_table.isolated",
+				"mode": "managed",
+				"type": "aws_route_table",
+				"name": "isolated",
+				"provider_name": "registry.terraform.io/hashicorp/aws",
+				"change": {
+					"actions": ["create"],
+					"before": null,
+					"after": {
+						"region": "us-west-2",
+						"route": [],
+						"tags": null,
+						"tags_all": {
+							"Name": "offline-network",
+							"environment": "development",
+							"infraforge_request": "00000000-0000-0000-0000-000000000000",
+							"infraforge_tenant": "99e5095aacce94d035c31d3e0842540182591e18766b7cdf6c9f3e095e837dda",
+							"managed_by": "infraforge",
+							"owner": "platform"
+						},
+						"timeouts": null
+					},
+					"after_unknown": {
+						"arn": true,
+						"id": true,
+						"owner_id": true,
+						"propagating_vgws": true,
+						"route": [],
+						"tags_all": {},
+						"vpc_id": true
+					},
+					"before_sensitive": false,
+					"after_sensitive": {
+						"propagating_vgws": [],
+						"route": [],
+						"tags_all": {}
+					},
+					"after_identity": {
+						"account_id": null,
+						"id": null,
+						"region": null
+					}
+				}
+			},
+			{
+				"address": "aws_route_table_association.private_0",
+				"mode": "managed",
+				"type": "aws_route_table_association",
+				"name": "private_0",
+				"provider_name": "registry.terraform.io/hashicorp/aws",
+				"change": {
+					"actions": ["create"],
+					"before": null,
+					"after": {
+						"gateway_id": null,
+						"region": "us-west-2",
+						"timeouts": null
+					},
+					"after_unknown": {
+						"id": true,
+						"route_table_id": true,
+						"subnet_id": true
+					},
+					"before_sensitive": false,
+					"after_sensitive": {}
+				}
+			},
+			{
+				"address": "aws_security_group.workload",
+				"mode": "managed",
+				"type": "aws_security_group",
+				"name": "workload",
+				"provider_name": "registry.terraform.io/hashicorp/aws",
+				"change": {
+					"actions": ["create"],
+					"before": null,
+					"after": {
+						"description": "Managed by Terraform",
+						"egress": [],
+						"ingress": [
+							{
+								"cidr_blocks": ["10.42.1.0/24"],
+								"description": "Validated private ingress",
+								"from_port": 443,
+								"ipv6_cidr_blocks": [],
+								"prefix_list_ids": [],
+								"protocol": "tcp",
+								"security_groups": [],
+								"self": false,
+								"to_port": 443
+							}
+						],
+						"name": "offline-network",
+						"region": "us-west-2",
+						"revoke_rules_on_delete": false,
+						"tags": null,
+						"tags_all": {
+							"Name": "offline-network",
+							"environment": "development",
+							"infraforge_request": "00000000-0000-0000-0000-000000000000",
+							"infraforge_tenant": "99e5095aacce94d035c31d3e0842540182591e18766b7cdf6c9f3e095e837dda",
+							"managed_by": "infraforge",
+							"owner": "platform"
+						},
+						"timeouts": null
+					},
+					"after_unknown": {
+						"arn": true,
+						"egress": [],
+						"id": true,
+						"ingress": [
+							{
+								"cidr_blocks": [false],
+								"ipv6_cidr_blocks": [],
+								"prefix_list_ids": [],
+								"security_groups": []
+							}
+						],
+						"name_prefix": true,
+						"owner_id": true,
+						"tags_all": {},
+						"vpc_id": true
+					},
+					"before_sensitive": false,
+					"after_sensitive": {
+						"egress": [],
+						"ingress": [
+							{
+								"cidr_blocks": [false],
+								"ipv6_cidr_blocks": [],
+								"prefix_list_ids": [],
+								"security_groups": []
+							}
+						],
+						"tags_all": {}
+					},
+					"after_identity": {
+						"account_id": null,
+						"id": null,
+						"region": null
+					}
+				}
+			},
+			{
+				"address": "aws_subnet.private_0",
+				"mode": "managed",
+				"type": "aws_subnet",
+				"name": "private_0",
+				"provider_name": "registry.terraform.io/hashicorp/aws",
+				"change": {
+					"actions": ["create"],
+					"before": null,
+					"after": {
+						"assign_ipv6_address_on_creation": false,
+						"availability_zone": "us-west-2a",
+						"cidr_block": "10.42.1.0/24",
+						"customer_owned_ipv4_pool": null,
+						"enable_dns64": false,
+						"enable_lni_at_device_index": null,
+						"enable_resource_name_dns_a_record_on_launch": false,
+						"enable_resource_name_dns_aaaa_record_on_launch": false,
+						"ipv6_cidr_block": null,
+						"ipv6_native": false,
+						"map_customer_owned_ip_on_launch": null,
+						"map_public_ip_on_launch": false,
+						"outpost_arn": null,
+						"region": "us-west-2",
+						"tags": null,
+						"tags_all": {
+							"Name": "offline-network",
+							"environment": "development",
+							"infraforge_request": "00000000-0000-0000-0000-000000000000",
+							"infraforge_tenant": "99e5095aacce94d035c31d3e0842540182591e18766b7cdf6c9f3e095e837dda",
+							"managed_by": "infraforge",
+							"owner": "platform"
+						},
+						"timeouts": null
+					},
+					"after_unknown": {
+						"arn": true,
+						"availability_zone_id": true,
+						"id": true,
+						"ipv6_cidr_block_association_id": true,
+						"owner_id": true,
+						"private_dns_hostname_type_on_launch": true,
+						"tags_all": {},
+						"vpc_id": true
+					},
+					"before_sensitive": false,
+					"after_sensitive": {
+						"tags_all": {}
+					},
+					"after_identity": {
+						"account_id": null,
+						"id": null,
+						"region": null
+					}
+				}
+			},
+			{
+				"address": "aws_vpc.network",
+				"mode": "managed",
+				"type": "aws_vpc",
+				"name": "network",
+				"provider_name": "registry.terraform.io/hashicorp/aws",
+				"change": {
+					"actions": ["create"],
+					"before": null,
+					"after": {
+						"assign_generated_ipv6_cidr_block": false,
+						"cidr_block": "10.42.0.0/16",
+						"enable_dns_hostnames": true,
+						"enable_dns_support": true,
+						"enable_network_address_usage_metrics": false,
+						"instance_tenancy": "default",
+						"ipv4_ipam_pool_id": null,
+						"ipv4_netmask_length": null,
+						"ipv6_ipam_pool_id": null,
+						"ipv6_netmask_length": null,
+						"region": "us-west-2",
+						"tags": null,
+						"tags_all": {
+							"Name": "offline-network",
+							"environment": "development",
+							"infraforge_request": "00000000-0000-0000-0000-000000000000",
+							"infraforge_tenant": "99e5095aacce94d035c31d3e0842540182591e18766b7cdf6c9f3e095e837dda",
+							"managed_by": "infraforge",
+							"owner": "platform"
+						}
+					},
+					"after_unknown": {
+						"arn": true,
+						"default_network_acl_id": true,
+						"default_route_table_id": true,
+						"default_security_group_id": true,
+						"dhcp_options_id": true,
+						"id": true,
+						"ipv6_association_id": true,
+						"ipv6_cidr_block": true,
+						"ipv6_cidr_block_network_border_group": true,
+						"main_route_table_id": true,
+						"owner_id": true,
+						"tags_all": {}
+					},
+					"before_sensitive": false,
+					"after_sensitive": {
+						"tags_all": {}
+					},
+					"after_identity": {
+						"account_id": null,
+						"id": null,
+						"region": null
+					}
+				}
+			}
+		],
+		"output_changes": {
+			"vpc_id": {
+				"actions": ["create"],
+				"before": null,
+				"after_unknown": true,
+				"before_sensitive": false,
+				"after_sensitive": false
+			}
+		},
+		"configuration": {
+			"provider_config": {
+				"aws": {
+					"name": "aws",
+					"full_name": "registry.terraform.io/hashicorp/aws",
+					"version_constraint": "6.20.0",
+					"expressions": {
+						"default_tags": [
+							{
+								"tags": {
+									"constant_value": {
+										"Name": "offline-network",
+										"environment": "development",
+										"infraforge_request": "00000000-0000-0000-0000-000000000000",
+										"infraforge_tenant": "99e5095aacce94d035c31d3e0842540182591e18766b7cdf6c9f3e095e837dda",
+										"managed_by": "infraforge",
+										"owner": "platform"
+									}
+								}
+							}
+						],
+						"endpoints": [
+							{
+								"ec2": {
+									"constant_value": "http://127.0.0.1:1"
+								},
+								"sts": {
+									"constant_value": "http://127.0.0.1:1"
+								}
+							}
+						],
+						"region": {
+							"constant_value": "us-west-2"
+						},
+						"skip_credentials_validation": {
+							"constant_value": true
+						},
+						"skip_metadata_api_check": {
+							"constant_value": true
+						},
+						"skip_region_validation": {
+							"constant_value": true
+						},
+						"skip_requesting_account_id": {
+							"constant_value": true
+						}
+					}
+				}
+			},
+			"root_module": {
+				"outputs": {
+					"vpc_id": {
+						"expression": {
+							"constant_value": "${aws_vpc.network.id}",
+							"references": ["aws_vpc.network.id", "aws_vpc.network"]
+						}
+					}
+				},
+				"resources": [
+					{
+						"address": "aws_default_security_group.closed",
+						"mode": "managed",
+						"type": "aws_default_security_group",
+						"name": "closed",
+						"provider_config_key": "aws",
+						"expressions": {
+							"egress": {
+								"constant_value": []
+							},
+							"ingress": {
+								"constant_value": []
+							},
+							"vpc_id": {
+								"constant_value": "${aws_vpc.network.id}",
+								"references": ["aws_vpc.network.id", "aws_vpc.network"]
+							}
+						},
+						"schema_version": 1
+					},
+					{
+						"address": "aws_route_table.isolated",
+						"mode": "managed",
+						"type": "aws_route_table",
+						"name": "isolated",
+						"provider_config_key": "aws",
+						"expressions": {
+							"route": {
+								"constant_value": []
+							},
+							"vpc_id": {
+								"constant_value": "${aws_vpc.network.id}",
+								"references": ["aws_vpc.network.id", "aws_vpc.network"]
+							}
+						},
+						"schema_version": 0
+					},
+					{
+						"address": "aws_route_table_association.private_0",
+						"mode": "managed",
+						"type": "aws_route_table_association",
+						"name": "private_0",
+						"provider_config_key": "aws",
+						"expressions": {
+							"route_table_id": {
+								"constant_value": "${aws_route_table.isolated.id}",
+								"references": [
+									"aws_route_table.isolated.id",
+									"aws_route_table.isolated"
+								]
+							},
+							"subnet_id": {
+								"constant_value": "${aws_subnet.private_0.id}",
+								"references": [
+									"aws_subnet.private_0.id",
+									"aws_subnet.private_0"
+								]
+							}
+						},
+						"schema_version": 0
+					},
+					{
+						"address": "aws_security_group.workload",
+						"mode": "managed",
+						"type": "aws_security_group",
+						"name": "workload",
+						"provider_config_key": "aws",
+						"expressions": {
+							"egress": {
+								"constant_value": []
+							},
+							"ingress": {
+								"constant_value": [
+									{
+										"cidr_blocks": ["10.42.1.0/24"],
+										"description": "Validated private ingress",
+										"from_port": 443,
+										"ipv6_cidr_blocks": [],
+										"prefix_list_ids": [],
+										"protocol": "tcp",
+										"security_groups": [],
+										"self": false,
+										"to_port": 443
+									}
+								]
+							},
+							"name": {
+								"constant_value": "offline-network"
+							},
+							"vpc_id": {
+								"constant_value": "${aws_vpc.network.id}",
+								"references": ["aws_vpc.network.id", "aws_vpc.network"]
+							}
+						},
+						"schema_version": 1
+					},
+					{
+						"address": "aws_subnet.private_0",
+						"mode": "managed",
+						"type": "aws_subnet",
+						"name": "private_0",
+						"provider_config_key": "aws",
+						"expressions": {
+							"availability_zone": {
+								"constant_value": "us-west-2a"
+							},
+							"cidr_block": {
+								"constant_value": "10.42.1.0/24"
+							},
+							"map_public_ip_on_launch": {
+								"constant_value": false
+							},
+							"vpc_id": {
+								"constant_value": "${aws_vpc.network.id}",
+								"references": ["aws_vpc.network.id", "aws_vpc.network"]
+							}
+						},
+						"schema_version": 1
+					},
+					{
+						"address": "aws_vpc.network",
+						"mode": "managed",
+						"type": "aws_vpc",
+						"name": "network",
+						"provider_config_key": "aws",
+						"expressions": {
+							"assign_generated_ipv6_cidr_block": {
+								"constant_value": false
+							},
+							"cidr_block": {
+								"constant_value": "10.42.0.0/16"
+							},
+							"enable_dns_hostnames": {
+								"constant_value": true
+							},
+							"enable_dns_support": {
+								"constant_value": true
+							},
+							"enable_network_address_usage_metrics": {
+								"constant_value": false
+							}
+						},
+						"schema_version": 1
+					}
+				]
+			}
+		},
+		"relevant_attributes": [
+			{
+				"resource": "aws_route_table.isolated",
+				"attribute": ["id"]
+			},
+			{
+				"resource": "aws_subnet.private_0",
+				"attribute": ["id"]
+			},
+			{
+				"resource": "aws_vpc.network",
+				"attribute": ["id"]
+			}
+		],
+		"timestamp": "2026-10-31T21:33:28Z",
+		"applyable": true,
+		"complete": true,
+		"errored": false
+	}
+}

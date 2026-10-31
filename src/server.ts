@@ -1,12 +1,31 @@
 import { createServer } from "node:http";
-import { readFileSync } from "node:fs";
+import { readFileSync, mkdirSync, realpathSync, existsSync } from "node:fs";
 import { timingSafeEqual } from "node:crypto";
 import { Forge, type Actor } from "./core.js";
 import { z } from "zod";
 import { resolve } from "node:path";
+import { AwsGate } from "./aws.js";
 process.umask(0o077);
 const dataRoot = resolve(process.env.INFRAFORGE_DATA_DIR || ".data");
+if (!process.env.INFRAFORGE_KEY_FILE)
+	throw Error("Set INFRAFORGE_KEY_FILE to a separate 32-byte key file");
+mkdirSync(dataRoot, { recursive: true, mode: 0o700 });
+if (existsSync(resolve(dataRoot, "migration.pending")))
+	throw Error(
+		"Offline migration is incomplete. Keep the source backup and use a fresh destination.",
+	);
+const keyPath = realpathSync(process.env.INFRAFORGE_KEY_FILE);
+if (keyPath.startsWith(realpathSync(dataRoot) + "/"))
+	throw Error("Encryption key must be outside the data directory");
 const f = new Forge(() => Date.now(), {
+	key: readFileSync(keyPath),
+	aws: process.env.INFRAFORGE_AWS_CONFIG_FILE
+		? new AwsGate(
+				JSON.parse(
+					readFileSync(process.env.INFRAFORGE_AWS_CONFIG_FILE, "utf8"),
+				),
+			)
+		: undefined,
 	database: resolve(dataRoot, "infraforge.sqlite"),
 	workspaces: resolve(dataRoot, "workspaces"),
 });
@@ -71,6 +90,11 @@ export const server = createServer(async (req, res) => {
 			res.end(
 				JSON.stringify({
 					identity: { id: actor.id, tenant: actor.tenant, role: actor.role },
+					capabilities: {
+						encryptedStorage: true,
+						awsNetworkExecution: f.runner.enabledAws(actor.tenant),
+						paidProvisioning: false,
+					},
 					requests: f.list(actor),
 					audit: f.audit.filter((e) => e.tenant === actor.tenant),
 				}),

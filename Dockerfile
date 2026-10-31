@@ -4,9 +4,10 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm ci --ignore-scripts
 COPY . .
-RUN node scripts/install-opa.mjs && node scripts/install-terraform.mjs && npm run build && npm prune --omit=dev --ignore-scripts
+RUN node scripts/install-opa.mjs && node scripts/install-terraform.mjs && npm run build && node scripts/prepare-aws.mjs && rm -rf terraform/aws-network/.terraform && npm prune --omit=dev --ignore-scripts
 FROM node:24-bookworm-slim@sha256:c86ecead9e55a5210ac1727de38a4ca840bf03dcaf34dc9749addbf383b1920c
 WORKDIR /app
+COPY --from=build /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
 COPY --from=build /app/node_modules ./node_modules
 COPY --from=build /app/dist/src ./dist/src
 COPY --from=build /app/.tools ./.tools

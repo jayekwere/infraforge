@@ -19,6 +19,8 @@ jobs:
           cache: npm
       - run: npm ci --ignore-scripts
       - run: node scripts/install-opa.mjs && node scripts/install-terraform.mjs
+      - run: npm run prepare:aws
+      - run: npm run test:aws-plan
       - run: npm run verify
       - run: npm audit --audit-level=high
       - run: python3 -m unittest discover -s python -p 'test_*.py'

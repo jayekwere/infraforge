@@ -1,42 +1,22 @@
 # Operations and recovery
 
-## Storage and backup
+Release 0.3 requires encrypted schema 2, a separate raw 32-byte key file and authenticated encrypted Terraform workspace/state files. Never point it at an old plaintext volume and assume it has been upgraded. Use the explicit offline copy migration described in [encryption and rotation](encryption.md). Retain source backups until the migrated inventory and audit history have been verified.
 
-The server persists requests, reservations, approvals, operations and hash-chained audit events in `.data/infraforge.sqlite`, schema version 1. SQLite uses WAL and FULL synchronous commits. Terraform uses `.data/workspaces/<tenant-sha256>/<request-uuid>/`. Request workspaces have mode 0700, the database has mode 0600, and the server uses umask 077. Container data lives in a named volume; a container restart retains it.
+The default data directory is `.data`, or `INFRAFORGE_DATA_DIR`. Persistent files use owner-only permissions. SQLite uses WAL with FULL synchronization. A read-only root container with a writable data volume, separate key secret and tmpfs scratch is the supported Docker arrangement. Run one API service per data directory. Database transactions serialize local connections; this is not a distributed execution lease.
 
-Run one API service per data directory or named volume. Do not share a writable volume across independently running containers. SQLite serializes database connections, but the local execution owner check is not a distributed lease.
+Every apply or destroy consumes independent approval and commits the operation journal before Terraform runs. The worker encrypts valid state checkpoints during the command. The parent seals the final state and workspace and requires readback before reporting completion. Successful terminal operations accept an idempotent retry with the same digest. Failed, timed-out or interrupted operations are not automatically replayed.
 
-Store the database and workspaces together. Stop the service cleanly before copying the complete data directory or named volume to an encrypted backup destination. Include SQLite WAL/SHM files if present. Restore the complete directory together, keep the same filesystem ownership, and retain `.data/identities.json` separately and securely. Do not restore a database alone over newer Terraform state. Validate requests and audit history after restore; replan approvals if modules, policy or Terraform versions changed. Future database versions are rejected instead of silently downgraded.
+For `executing` or `uncertain` results:
 
-Terraform state and plan files are plaintext on the local filesystem. The offline module contains only configuration and Terraform IDs, and no secrets. Protect host disks/backups with encryption. Do not submit secrets as request fields. Remote state, KMS-backed state encryption and cloud credential issuance are not implemented because cloud execution is disabled.
+1. Stop competing services and inspect the operation journal and workspace lock. Establish that no worker, Terraform or provider process is still running. Never remove an active lock or force-unlock an active Terraform operation.
+2. Preserve the complete encrypted directory and its separate key. Do not modify ciphertext or replace a database independently of its workspaces. Wrong keys, authentication failures and missing checkpoints fail closed.
+3. After confirming an abrupt process has exited, remove only its stale `workspace.lock` if necessary and restart the service. Run `reconcile REQUEST_ID` with an operator identity.
+4. Reconciliation accepts only matching complete state. AWS reconciliation additionally performs provider refresh in the configured account/role. Missing or partial state remains quarantined. A host crash before checkpoint persistence may require a separate investigation of tagged AWS resources; never claim that a missing state file proves their deletion.
 
-## Interrupted execution
+An operator can generate an independently approved local repair plan after state drift. AWS repair remains disabled; the AWS execution scope is new isolated networks and separately approved teardown. AWS provider plans/refreshes, session expiry and permission failures are conservative failures. Replanning invalidates prior approval. A changed target, policy, configuration, version, state or saved plan also invalidates execution.
 
-Each execution consumes approval and records its digest before running Terraform. A successful exit also needs state readback to prove the expected resources or empty teardown state. Failed commands and readback failures enter `uncertain`; a process crash may leave `executing`. Automatic retries are blocked. Successful terminal operations accept an idempotent retry with the same digest without executing Terraform again.
+No automatic cleanup, paid recovery, state import, arbitrary command, user-selected module or cloud execution fallback is offered. Azure/GCP are still exports. See [AWS execution](aws-execution.md) for the strict resource allowlist and offline verification boundaries.
 
-1. Stop other service instances and establish that no orphan Terraform process is still running against the request workspace. Do not force-unlock an active Terraform operation.
-2. Inspect the operation's audit record, saved plan and `terraform show -json` state within that exact workspace. Workspaces remain reserved and cannot be revised while uncertain.
-3. Run `reconcile REQUEST_ID` with an operator token. Reconciliation rejects an executing entry whose original process is still alive. A process session identifier distinguishes a restarted server that reused its own PID. It checks every expected resource's input/output against the approved request; destruction requires empty state.
-4. If state proves completion, reconciliation records the terminal state without rerunning Terraform. If state is partial or absent, the workspace remains quarantined. Preserve a full backup and complete forensic review before any manual local repair. There is no API bypass that clears an uncertain operation or reuses its approval.
+Observed development issues: provider route attributes were initially computed/unknown, so the executable module now explicitly specifies an empty route set. Terraform's initial lock activity can create an empty transient state file; the checkpoint worker waits for valid JSON. Older plaintext fixtures and direct file tamper tests were updated to exercise encrypted archives, wrong contexts and state hashes. Local provider socket operations require an environment that permits local plugin sockets. Docker restart tests rediscover dynamically assigned host ports.
 
-This recovery mechanism is tested by injecting a lost response after Terraform has completed. It is local-state recovery, not proof of remote cloud recovery. PID reuse can conservatively block reconciliation; resolve that only after process inspection. Multi-host coordination and distributed execution workers are outside this release.
-
-## Drift and remediation
-
-`drift REQUEST_ID` compares Terraform state input and output for every managed local resource against the desired request, including subnets, firewall, identity and optional service configuration. A viewer or operator can check drift. The operator can use `plan-repair REQUEST_ID` to generate an actual saved Terraform change plan; a separate reviewer must approve it before apply. Repair has the same hash and expiry controls as a new deployment. State mutation tests demonstrate detected firewall drift and approved correction. Python `python/drift.py desired.json observed.json` is a separate read-only export comparator.
-
-There is no scheduled cloud drift discovery. Local Terraform state has no remote provider to refresh. Missing/corrupt state that cannot safely generate a plan needs manual inspection, not an automatic recreate or force unlock.
-
-## Policy and artifact failures
-
-Missing OPA, undefined policy output, timeout and malformed output fail closed. Reinstall the verified tool and generate a new plan. Changed policy/module bytes, Terraform version, state or saved plan invalidate execution and require replanning plus fresh approval. A cloud module cannot be executed even if it has an approved export. Azure/GCP unsupported service fields are rejected.
-
-## Observed development failures
-
-- TypeScript 7 required explicit Node/React type selection, now recorded in tsconfig.
-- Azure's provider requires all collection fields in inline NSG rule objects. Schema validation exposed the omission; the generator now supplies them and validates successfully.
-- Replacing a locally copied read-only Terraform binary initially failed. The installer now writes a unique temporary binary and atomically renames it after checksum verification.
-- Browser assertions initially used Playwright's five-second default, which was too short during a loaded local run. They now allow 30 seconds within a bounded two-minute lifecycle test.
-- Docker reassigned the dynamically published host port after restart. The smoke test now discovers the port again before checking persistence.
-
-No paid resource provisioning or cloud apply was attempted. Provider-schema validation is not live integration validation.
+The extended Docker test originally reused an idle HTTP connection after a synchronous provider check. Its client now explicitly closes connections between requests; it does not retry mutations. The final image also carries TLS trust roots and provider checksums for both Linux architectures so the read-only offline mirror can be verified without runtime downloads.
