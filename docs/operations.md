@@ -36,6 +36,7 @@ Missing OPA, undefined policy output, timeout and malformed output fail closed. 
 - TypeScript 7 required explicit Node/React type selection, now recorded in tsconfig.
 - Azure's provider requires all collection fields in inline NSG rule objects. Schema validation exposed the omission; the generator now supplies them and validates successfully.
 - Replacing a locally copied read-only Terraform binary initially failed. The installer now writes a unique temporary binary and atomically renames it after checksum verification.
+- Browser assertions initially used Playwright's five-second default, which was too short during a loaded local run. They now allow 30 seconds within a bounded two-minute lifecycle test.
 - Docker reassigned the dynamically published host port after restart. The smoke test now discovers the port again before checking persistence.
 
 No paid resource provisioning or cloud apply was attempted. Provider-schema validation is not live integration validation.
