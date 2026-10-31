@@ -1,3 +1,5 @@
+import { execFileSync } from "node:child_process";
+import { resolve } from "node:path";
 import { mkdirSync as ensureDir } from "node:fs";
 import { test } from "node:test";
 import assert from "node:assert/strict";
@@ -299,6 +301,41 @@ test("enabled AWS refuses paid requests and credentials never enter persistent w
 		});
 		assert.throws(() => f.plan(a, e.id), /Paid provisioning blocked/);
 		assert.equal(f.get(a, e.id).state, "submitted");
+	} finally {
+		f.close();
+		rmSync(s.dir, { recursive: true, force: true });
+	}
+});
+test("revising an unexecuted local request to AWS removes the old module before provider startup", () => {
+	const s = setup(),
+		transport = fakeAwsTransport();
+	const f = new Forge(() => Date.now(), {
+		key: randomBytes(32),
+		database: join(s.dir, "infraforge.sqlite"),
+		workspaces: join(s.dir, "workspaces"),
+		aws: s.gate,
+		execute: (cwd, args, env) => {
+			if (env.AWS_ACCESS_KEY_ID) {
+				assert.equal(existsSync(join(cwd, "main.tf")), false);
+				return transport(cwd, args, env);
+			}
+			return execFileSync(resolve(".tools/terraform"), args, {
+				cwd,
+				env,
+				encoding: "utf8",
+				timeout: 60000,
+			});
+		},
+	});
+	try {
+		const e = f.submit(a, { ...fixture.spec, module: "local-network-v1" });
+		f.plan(a, e.id);
+		f.revise(a, e.id, fixture.spec);
+		assert.equal(f.plan(a, e.id).plan?.artifact?.backend, "aws");
+		f.revise(a, e.id, { ...fixture.spec, module: "local-network-v1" });
+		const local = f.plan(a, e.id).plan!.artifact!;
+		assert.equal(local.backend, "local");
+		assert.equal(local.target, undefined);
 	} finally {
 		f.close();
 		rmSync(s.dir, { recursive: true, force: true });

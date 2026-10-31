@@ -7,6 +7,7 @@ import {
 	existsSync,
 	chmodSync,
 	statfsSync,
+	rmSync,
 } from "node:fs";
 import { resolve, join } from "node:path";
 import { Vault } from "./vault.js";
@@ -105,6 +106,7 @@ export class Terraform {
 			TF_IN_AUTOMATION: "1",
 			CHECKPOINT_DISABLE: "1",
 			TF_INPUT: "0",
+			AWS_EC2_METADATA_DISABLED: "true",
 			...w.env,
 		};
 		if (w.backend === "aws") {
@@ -185,6 +187,12 @@ export class Terraform {
 		destroy = false,
 	): Artifact {
 		const w = this.current!;
+		// A revised request may select a different allowlisted module. Never load both configurations.
+		if (spec.module === "local-network-v1") {
+			rmSync(join(w.cwd, "main.tf.json"), { force: true });
+			rmSync(join(w.cwd, ".terraform.lock.hcl"), { force: true });
+		} else if (spec.module === "aws-network-v1")
+			rmSync(join(w.cwd, "main.tf"), { force: true });
 		let config: Buffer;
 		if (spec.module === "aws-network-v1") {
 			if (!this.executeCommand && statfsSync(w.cwd).type !== 0x01021994)
@@ -204,6 +212,8 @@ export class Terraform {
 			);
 		} else if (spec.module === "local-network-v1") {
 			w.backend = "local";
+			w.target = undefined;
+			w.env = undefined;
 			config = readFileSync(modulePath);
 		} else throw Error("Cloud execution is disabled");
 		const cwd = this.workspace(tenant, id);

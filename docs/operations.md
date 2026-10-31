@@ -22,3 +22,5 @@ Observed development issues: provider route attributes were initially computed/u
 The extended Docker test originally reused an idle HTTP connection after a synchronous provider check. Its client now explicitly closes connections between requests; it does not retry mutations. The final image also carries TLS trust roots and provider checksums for both Linux architectures so the read-only offline mirror can be verified without runtime downloads.
 
 The first 0.3 hosted run exposed a clean-checkout ordering error: the offline fixture generator imports compiled code, so CI must build before invoking it. CI now builds once, generates the real offline provider plan, then runs the tests and demonstration against that result.
+
+Revising a pending request between local and AWS modules removes the inactive Terraform configuration before initialization. A regression test checks this boundary so an earlier module cannot cause an unintended provider startup.
