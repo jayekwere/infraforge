@@ -1,22 +1,14 @@
 {
-  "compilerOptions": {
-    "target": "ES2024",
-    "module": "NodeNext",
-    "moduleResolution": "NodeNext",
-    "strict": true,
-    "outDir": "dist",
-    "jsx": "react-jsx",
-    "esModuleInterop": true,
-    "skipLibCheck": true,
-    "types": [
-      "node",
-      "react",
-      "react-dom"
-    ]
-  },
-  "include": [
-    "src/**/*.ts",
-    "web/**/*.tsx",
-    "test/**/*.ts"
-  ]
+	"compilerOptions": {
+		"target": "ES2024",
+		"module": "NodeNext",
+		"moduleResolution": "NodeNext",
+		"strict": true,
+		"outDir": "dist",
+		"jsx": "react-jsx",
+		"esModuleInterop": true,
+		"skipLibCheck": true,
+		"types": ["node", "react", "react-dom"]
+	},
+	"include": ["src/**/*.ts", "web/**/*.tsx", "test/**/*.ts"]
 }

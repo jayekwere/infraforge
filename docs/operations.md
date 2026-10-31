@@ -6,6 +6,6 @@ OPA absence, timeout or malformed output fails closed. Restore the verified bina
 
 Local destruction releases the reservation and deletes simulated inventory only. It has no independent destruction approval and must not be connected to cloud deletion. Distributed locks, durable transactions, retries after remote partial failure and state encryption are not implemented.
 
-The dashboard plan view displays structured intended inputs; it is not a Terraform before/after diff. Drift is an export comparator, not scheduled cloud detection. API integration tests, browser end-to-end coverage, screenshots, cloud adapters and full Terraform lifecycle integration are still required.
+The dashboard plan view displays structured intended inputs; it is not a Terraform before/after diff. Drift is an export comparator, not scheduled cloud detection. Browser end-to-end coverage, screenshots, cloud adapters and full Terraform lifecycle integration are still required.
 
 Initial build verification found missing explicit Node type selection with TypeScript 7; tsconfig now lists Node and React types. No cloud execution was attempted.

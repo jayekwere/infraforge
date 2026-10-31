@@ -1,2 +1,31 @@
-import {readFileSync} from 'node:fs';
-const [action,id,file]=process.argv.slice(2);const paths:Record<string,string>={list:'/api/requests',submit:'/api/requests',plan:`/api/requests/${id}/plan`,approve:`/api/requests/${id}/approve`,apply:`/api/requests/${id}/apply`,destroy:`/api/requests/${id}/destroy`,revise:`/api/requests/${id}/revise`};if(!paths[action])throw Error('Usage: cli list|submit|plan|approve|apply|revise|destroy [id] [JSON file]. submit takes file as id.');const body=action==='submit'?readFileSync(id,'utf8'):file?readFileSync(file,'utf8'):'{}';const response=await fetch(`http://127.0.0.1:8080${paths[action]}`,{method:action==='list'?'GET':'POST',headers:{Authorization:`Bearer ${process.env.INFRAFORGE_TOKEN||''}`,'Content-Type':'application/json'},...(action==='list'?{}:{body})});console.log(await response.text());if(!response.ok)process.exitCode=1;
+import { readFileSync } from "node:fs";
+const [action, id, file] = process.argv.slice(2);
+const paths: Record<string, string> = {
+	list: "/api/requests",
+	submit: "/api/requests",
+	plan: `/api/requests/${id}/plan`,
+	approve: `/api/requests/${id}/approve`,
+	apply: `/api/requests/${id}/apply`,
+	destroy: `/api/requests/${id}/destroy`,
+	revise: `/api/requests/${id}/revise`,
+};
+if (!paths[action])
+	throw Error(
+		"Usage: cli list|submit|plan|approve|apply|revise|destroy [id] [JSON file]. submit takes file as id.",
+	);
+const body =
+	action === "submit"
+		? readFileSync(id, "utf8")
+		: file
+			? readFileSync(file, "utf8")
+			: "{}";
+const response = await fetch(`http://127.0.0.1:8080${paths[action]}`, {
+	method: action === "list" ? "GET" : "POST",
+	headers: {
+		Authorization: `Bearer ${process.env.INFRAFORGE_TOKEN || ""}`,
+		"Content-Type": "application/json",
+	},
+	...(action === "list" ? {} : { body }),
+});
+console.log(await response.text());
+if (!response.ok) process.exitCode = 1;
