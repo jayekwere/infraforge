@@ -113,3 +113,7 @@ npm run test:compose
 CI runs these checks with read-only repository permissions, SHA-pinned actions, verified tool downloads, locked dependencies, no real cloud credentials and uploaded evidence. The Docker base is digest-pinned. The container tests create only temporary local volumes and remove their own test resources.
 
 See [encrypted storage and migration](docs/encryption.md), [AWS execution](docs/aws-execution.md), [architecture and threat model](docs/architecture.md), [operations and recovery](docs/operations.md), [security policy](SECURITY.md), [contributing](CONTRIBUTING.md), and [release notes](CHANGELOG.md).
+
+---
+
+**AI assistance:** AI tools helped with code or documentation.
